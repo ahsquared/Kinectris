@@ -160,32 +160,7 @@ public class Kinectris32 extends PApplet {
         pushMatrix();
         translate(width/2, height/2, 0);
         strokeWeight(10);
-        /*if(kinect.isTrackingSkeleton(1)) {
-            println("got a skeleton, drawing lower left arm");
-            int userId = 1;
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_HEAD, SimpleOpenNI.SKEL_NECK);
 
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_NECK, SimpleOpenNI.SKEL_LEFT_SHOULDER);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_LEFT_SHOULDER, SimpleOpenNI.SKEL_LEFT_ELBOW);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_LEFT_ELBOW, SimpleOpenNI.SKEL_LEFT_HAND);
-
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_NECK, SimpleOpenNI.SKEL_RIGHT_SHOULDER);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_RIGHT_SHOULDER, SimpleOpenNI.SKEL_RIGHT_ELBOW);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_RIGHT_ELBOW, SimpleOpenNI.SKEL_RIGHT_HAND);
-
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_LEFT_SHOULDER, SimpleOpenNI.SKEL_TORSO);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_RIGHT_SHOULDER, SimpleOpenNI.SKEL_TORSO);
-
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_TORSO, SimpleOpenNI.SKEL_LEFT_HIP);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_LEFT_HIP, SimpleOpenNI.SKEL_LEFT_KNEE);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_LEFT_KNEE, SimpleOpenNI.SKEL_LEFT_FOOT);
-
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_TORSO, SimpleOpenNI.SKEL_RIGHT_HIP);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_RIGHT_HIP, SimpleOpenNI.SKEL_RIGHT_KNEE);
-            kinect.drawLimb(userId, SimpleOpenNI.SKEL_RIGHT_KNEE, SimpleOpenNI.SKEL_RIGHT_FOOT);
-            drawLimb(userId, SimpleOpenNI.SKEL_LEFT_ELBOW, SimpleOpenNI.SKEL_LEFT_HAND );
-        }
-        */
         strokeWeight(1);
         popMatrix();
 
@@ -219,56 +194,7 @@ public class Kinectris32 extends PApplet {
 
     }
 
-   /* private void drawLimb(int userId,int jointType1,int jointType2) {
-        PVector jointPos1 = new PVector();
-        PVector jointPos2 = new PVector();
-        float  confidence;
 
-        // draw the joint position
-        confidence = kinect.getJointPositionSkeleton(userId,jointType1,jointPos1);
-        confidence = kinect.getJointPositionSkeleton(userId,jointType2,jointPos2);
-
-        stroke(255,255,255,confidence * 200 + 55);
-        strokeWeight(2);
-        pushMatrix();
-        translate(0,0,-jointPos1.z);
-        ellipse(jointPos1.x,-jointPos1.y, 30, 30);
-        ellipse(jointPos2.x,-jointPos2.y, 30, 30);
-        popMatrix();
-        strokeWeight(1);
-        //drawJointOrientation(userId,jointType1,jointPos1,50);
-    }
-    private void drawJointOrientation(int userId,int jointType,PVector pos,float length)
-    {
-        // draw the joint orientation
-        PMatrix3D  orientation = new PMatrix3D();
-        float confidence = kinect.getJointOrientationSkeleton(userId,jointType,orientation);
-        if(confidence < 0.001f)
-            // nothing to draw, orientation data is useless
-            return;
-
-        pushMatrix();
-        translate(pos.x,pos.y,pos.z);
-
-        // set the local coordsys
-        applyMatrix(orientation);
-
-        // coordsys lines are 100mm long
-        // x - r
-        stroke(255,0,0,confidence * 200 + 55);
-        line(0,0,0,
-                length,0,0);
-        // y - g
-        stroke(0,255,0,confidence * 200 + 55);
-        line(0,0,0,
-                0,length,0);
-        // z - b
-        stroke(0,0,255,confidence * 200 + 55);
-        line(0,0,0,
-                0,0,length);
-        popMatrix();
-    }
-*/
     private void drawStars() {
         fill(255);
         stroke(128);
@@ -708,65 +634,7 @@ public class Kinectris32 extends PApplet {
             offsetAdjustedPolygonCoords();
         }
     }
-// -----------------------------------------------------------------
-// SimpleOpenNI user events
-/*
-    public void onNewUser(int userId)
-    {
-        println("onNewUser - userId: " + userId);
-        println("  start pose detection");
 
-        if(autoCalib)
-            kinect.requestCalibrationSkeleton(userId,true);
-        else
-            kinect.startPoseDetection("Psi",userId);
-    }
-
-    public void onLostUser(int userId)
-    {
-        println("onLostUser - userId: " + userId);
-    }
-
-    public void onStartCalibration(int userId)
-    {
-        println("onStartCalibration - userId: " + userId);
-    }
-
-    public void onEndCalibration(int userId, boolean successfull)
-    {
-        println("onEndCalibration - userId: " + userId + ", successfull: " + successfull);
-
-        if (successfull)
-        {
-            println("  User calibrated !!!");
-            kinect.startTrackingSkeleton(userId);
-        }
-        else
-        {
-            println("  Failed to calibrate user !!!");
-            println("  Start pose detection");
-            kinect.startPoseDetection("Psi",userId);
-        }
-    }
-
-    public void onStartPose(String pose,int userId)
-    {
-        println("onStartdPose - userId: " + userId + ", pose: " + pose);
-        println(" stop pose detection");
-
-        kinect.stopPoseDetection(userId);
-        kinect.requestCalibrationSkeleton(userId, true);
-
-    }
-
-    public void onEndPose(String pose,int userId)
-    {
-        println("onEndPose - userId: " + userId + ", pose: " + pose);
-    }
-	*/
-//    static public void main(String args[]) {
-//            PApplet.main(new String[] { "--present", "kinectris32.Kinectris32"});
-//    }
 	public static void main(String _args[]) {
 		PApplet.main(new String[] { kinectris32.Kinectris32.class.getName() });
 	}

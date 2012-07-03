@@ -10,6 +10,10 @@ import javax.swing.JOptionPane;
 
 import beads.*;
 import SimpleOpenNI.*;
+import peasy.*;
+import shapes3d.utils.*;
+import shapes3d.animation.*;
+import shapes3d.*;
 
 
 public class Kinectris32 extends PApplet {
@@ -34,7 +38,7 @@ public class Kinectris32 extends PApplet {
     int colT = color(255, 100, 100);
     int colP = color(100, 255, 100);
     Polygon polygonTarget = new Polygon(10, 250, -1500, colT, false, false, false);
-    Polygon polygonPlayer = new Polygon(8, 80, -350, colP, true, true, true);
+    Polygon polygonPlayer = new Polygon(8, 80, -350, colP, true, false, true);
     PFont myFont;
     int scorePosX = 100;
     boolean paused;
@@ -57,6 +61,12 @@ public class Kinectris32 extends PApplet {
     Gain sineGain[];
     Gain masterGain;
     Glide sineFrequency[];
+    
+    PImage tex;
+    
+    PeasyCam camera;
+    
+    Box box;
 
     public void setup() {
         size(1024, 768, P3D);
@@ -70,6 +80,8 @@ public class Kinectris32 extends PApplet {
         fill(0);
         hint(ENABLE_NATIVE_FONTS);
         textMode(SCREEN);
+        
+        camera = new PeasyCam(this, 510, 385, 0, 1150);
         
         /* setup Kinect */
         /*try {
@@ -94,15 +106,15 @@ public class Kinectris32 extends PApplet {
         oscP5 = new OscP5(this, 3001);
         myRemoteLocation = new NetAddress("127.0.0.1", 3001);
         oscP5.plug(this, "allJoints", "/skeleton0");
-        oscP5.plug(this, "wristLeft", "/skeleton0/WristLeft");
-        oscP5.plug(this, "shoulderRight", "kinect/skeleton/0/shoulder_right");
-        oscP5.plug(this, "shoulderLeft", "kinect/skeleton/0/shoulder_left");
-        oscP5.plug(this, "footRight", "kinect/skeleton/0/foot_right");
-        oscP5.plug(this, "footLeft", "kinect/skeleton/0/foot_left");
-        oscP5.plug(this, "hipRight", "kinect/skeleton/0/hip_right");
-        oscP5.plug(this, "hipLeft", "kinect/skeleton/0/hip_left");
-        oscP5.plug(this, "hipCenter", "kinect/skeleton/0/hip_center");
-        oscP5.plug(this, "head", "kinect/skeleton/0/head");
+//        oscP5.plug(this, "wristLeft", "/skeleton0/WristLeft");
+//        oscP5.plug(this, "shoulderRight", "kinect/skeleton/0/shoulder_right");
+//        oscP5.plug(this, "shoulderLeft", "kinect/skeleton/0/shoulder_left");
+//        oscP5.plug(this, "footRight", "kinect/skeleton/0/foot_right");
+//        oscP5.plug(this, "footLeft", "kinect/skeleton/0/foot_left");
+//        oscP5.plug(this, "hipRight", "kinect/skeleton/0/hip_right");
+//        oscP5.plug(this, "hipLeft", "kinect/skeleton/0/hip_left");
+//        oscP5.plug(this, "hipCenter", "kinect/skeleton/0/hip_center");
+//        oscP5.plug(this, "head", "kinect/skeleton/0/head");
         int len = stars.length;
         for (int i=0; i < len; i++) {
             stars[i] = new Star();
@@ -118,6 +130,21 @@ public class Kinectris32 extends PApplet {
 
         // initialize kinectData
         kinectData = new KinectData();
+        
+        tex = loadImage("/src/data/chr.jpg");
+        
+        box = new Box(this);
+        String[] faces = new String[] {
+          "/src/data/chr.jpg", "/src/data/chr.jpg"
+        };
+        box.setTexture("/src/data/chr.jpg", Box.FRONT);
+        box.fill(color(255));
+        box.stroke(color(190));
+        box.strokeWeight(1.2f);
+        box.setSize(100, 100, 100);
+        box.rotateTo(radians(45), radians(45), radians(45));
+        box.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
+
    }
 
     
@@ -141,10 +168,10 @@ public class Kinectris32 extends PApplet {
         background(0);
         // draw the bg stars
         
-        pushMatrix();
-        translate(0,0,-1600);
+        //pushMatrix();
+        //translate(0,0,-1600);
         //drawStars();
-        popMatrix();
+        //popMatrix();
         fill(255,0,0, 200);
 
         // draw the game stage
@@ -192,6 +219,7 @@ public class Kinectris32 extends PApplet {
         //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
         //text("Score: " + polygonPlayer.score, scorePosX, 100, 0);
 
+        box.draw();
     }
 
 
@@ -336,6 +364,8 @@ public class Kinectris32 extends PApplet {
         beginShape(QUADS);
         fill(clr, 0);
         stroke(clr);
+        //texture(tex);
+        // front
         vertex(-1,  1,  1);
         vertex( 1,  1,  1);
         vertex( 1, -1,  1);
@@ -575,7 +605,7 @@ public class Kinectris32 extends PApplet {
             fill(clr, 20);
             stroke(clr, 50);
             pushMatrix();
-            translate(width/2, height/2, zDepth);
+            translate(width/2, height/2, 0);
             //box(width * .75f, height * .75f, 2);
             drawBox(width * .75f, height * 1f, 1f, zDepth, clr);
             popMatrix();

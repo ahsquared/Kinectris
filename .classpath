@@ -3,32 +3,32 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/base/beads/beads.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/beads/doc/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/beads/jl1.0.1.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/beads/doc/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/beads/mp3spi1.9.4.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/beads/doc/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/beads/tritonus_share.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/beads/doc/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/beads"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/controlP5/controlP5.jar" sourcepath="C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/controlP5/src">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/controlP5"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/controlP5/reference/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/controlP5"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/opengl/gluegen-rt.jar" sourcepath="C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/opengl/src">
@@ -48,14 +48,16 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/oscP5/controlP5.jar" sourcepath="C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/oscP5/src">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/oscP5"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/oscP5/reference/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/oscP5"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/base/peasycam/peasycam.jar"/>
+	<classpathentry kind="lib" path="lib/base/shapes3d/shapes3d.jar"/>
 	<classpathentry kind="lib" path="lib/base/oscP5/oscP5.jar" sourcepath="C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/oscP5/src">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/oscP5"/>
 			<attribute name="javadoc_location" value="file:/C:/Users/andre.h/Documents/Processing/processing-1.5.1/modes/java/libraries/oscP5/reference/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Kinectris32/lib/base/oscP5"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/base/SimpleOpenNI/SimpleOpenNI.jar">

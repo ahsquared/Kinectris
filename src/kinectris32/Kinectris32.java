@@ -37,14 +37,16 @@ public class Kinectris32 extends PApplet {
 
     int colT = color(255, 100, 100);
     int colP = color(100, 255, 100);
-    Polygon polygonTarget = new Polygon(10, 250, -1500, colT, false, false, false);
-    Polygon polygonPlayer = new Polygon(8, 80, -350, colP, true, false, true);
+    PolygonTarget polygonTarget;
+    PolygonPlayer polygonPlayer;
     PFont myFont;
     int scorePosX = 100;
     boolean paused;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
 
+    // Levels
+    int level = 1;
     
     // Kinect Joints
     KinectData kinectData;
@@ -133,6 +135,9 @@ public class Kinectris32 extends PApplet {
         
         tex = loadImage("/src/data/chr.jpg");
         
+        polygonTarget = new PolygonTarget(4, 450, -1500, colT, false, false, false);
+        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, false, true);
+
         box = new Box(this);
         String[] faces = new String[] {
           "/src/data/chr.jpg", "/src/data/chr.jpg"
@@ -213,7 +218,7 @@ public class Kinectris32 extends PApplet {
                 } else {
                     text("MISS!! :-( Score: " + polygonPlayer.score, scorePosX, 100);
                 }
-                polygonTarget.regeneratePolygon();
+                polygonTarget.generatePolygon();
             }
         }
         //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
@@ -401,9 +406,9 @@ public class Kinectris32 extends PApplet {
         popMatrix();
     }
 
-    public boolean pointInPolygon(Polygon polyTarget, float[] p) {
+    public boolean pointInPolygon(PolygonTarget polygonTarget, float[] p) {
         int i = 0;
-        float[][] targetPoints =  polyTarget.getPolygon();
+        float[][] targetPoints =  polygonTarget.getPolygon();
         float[] pointsX = targetPoints[0];
         float[] pointsY = targetPoints[1];
         int polySides = targetPoints[0].length;
@@ -492,8 +497,8 @@ public class Kinectris32 extends PApplet {
     	}
     	
     }
-    
-    class Polygon {
+
+    class PolygonTarget {
         float[][] polygon;
         int clr;
         boolean move, kinect, filled;
@@ -504,12 +509,10 @@ public class Kinectris32 extends PApplet {
         float deltaX, deltaY, deltaZ;
         int score, lives;
 
-        Polygon(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
+        PolygonTarget(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
             zDepth = ogDepth = z;
             polySize = size;
-            polygon = polygonPathConvexRelative(n, size, z);
             adjustedPolygonCoords = new float[3][n];
-            offsetAdjustedPolygonCoords();
             clr = c;
             move = m;
             kinect = k;
@@ -517,7 +520,7 @@ public class Kinectris32 extends PApplet {
             numPoints = n;
             score = 0;
             lives = 5;
-            resetDeltas();
+            generatePolygon();
         }
 
         private void resetDeltas() {
@@ -525,7 +528,26 @@ public class Kinectris32 extends PApplet {
             deltaY = ((float)Math.random() * 6) - 3;
             deltaZ = ((float)Math.random() * 10) + 5;
         }
-
+        
+        private float[][] simpleWall(float z) {
+        	this.zDepth = z;
+        	float[][] polygonCoords = new float[3][4];
+        	float wallWidth = ((float)Math.random() * (width-300)) - (width*.75f) + 300;
+            polygonCoords[0][0] = wallWidth;
+            polygonCoords[1][0] = -height;
+            polygonCoords[2][0] = z;
+            polygonCoords[0][1] = wallWidth;
+            polygonCoords[1][1] = height;
+            polygonCoords[2][1] = z;
+            polygonCoords[0][2] = -width * .75f;
+            polygonCoords[1][2] = height;
+            polygonCoords[2][2] = z;
+            polygonCoords[0][3] = -width * .75f;
+            polygonCoords[1][3] = -height;
+            polygonCoords[2][3] = z;
+            return polygonCoords;
+        }
+        
         private float[][] polygonPathConvexRelative(int n, int size, float z) {
             this.zDepth = z;
             float[][] polygonCoords = new float[3][n];
@@ -551,24 +573,34 @@ public class Kinectris32 extends PApplet {
             return adjustedPolygonCoords;
         }
 
-        private void regeneratePolygon() {
-            polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
-            resetDeltas();
+        private void generatePolygon() {
+            if (level == 2) {
+            	polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+            } else {
+            	polygon = simpleWall(ogDepth);  
+            }            
             offsetAdjustedPolygonCoords();
+            resetDeltas();
         }
 
         private void shootPolygon(float deltaX, float deltaY, float deltaZ) {
             float newZ;
             if (zDepth > 300) {
                 zDepth = ogDepth;
-                regeneratePolygon();
+                generatePolygon();
             } else {
                 zDepth += deltaZ;
             }
-            for (int i = 0; i < numPoints; i++) {
-                polygon[0][i] += deltaX;
-                polygon[1][i] += deltaY;
-                polygon[2][i] = zDepth;
+            if (numPoints > 4) {
+	            for (int i = 0; i < numPoints; i++) {
+	                polygon[0][i] += deltaX;
+	                polygon[1][i] += deltaY;
+	                polygon[2][i] = zDepth;
+	            }
+            } else {
+	            for (int i = 0; i < numPoints; i++) {
+	                polygon[2][i] = zDepth;
+	            }          	
             }
         }
 
@@ -616,15 +648,16 @@ public class Kinectris32 extends PApplet {
             }
             stroke(clr);
             strokeWeight(2);
+            fill(0);
             beginShape();
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             for (int i=0; i < n; i++) {
-                //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-                curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
                 //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
-            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);
             strokeWeight(1);
@@ -638,12 +671,146 @@ public class Kinectris32 extends PApplet {
 
         }
 
-        private boolean checkHit(Polygon target) {
+        private void updateJoint(int joint, float x, float y, float z) {
+            // adjust x,y,z positions to match canvas dimensions
+            x = (x * width);
+            y = (y * height);
+            polygon[0][joint] = x;
+            polygon[1][joint] = y;
+            // leave z alone for now
+            // polygon[2][joint] = z;
+            offsetAdjustedPolygonCoords();
+        }
+    }
+    
+    class PolygonPlayer {
+        float[][] polygon;
+        int clr;
+        boolean move, kinect, filled;
+        int numPoints;
+        float[][] adjustedPolygonCoords;
+        float zDepth, ogDepth;
+        int polySize;
+        float deltaX, deltaY, deltaZ;
+        int score, lives;
+
+        PolygonPlayer(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
+            zDepth = ogDepth = z;
+            polySize = size;
+            adjustedPolygonCoords = new float[3][n];
+            clr = c;
+            move = m;
+            kinect = k;
+            filled = f;
+            numPoints = n;
+            score = 0;
+            lives = 5;
+            generatePolygon();
+        }
+        
+        private float[][] polygonPathConvexRelative(int n, int size, float z) {
+            this.zDepth = z;
+            float[][] polygonCoords = new float[3][n];
+            double angle = 2 * Math.PI / n;
+            float startX = 0;
+            float startY = (float)Math.random() * size;
+            polygonCoords[0][0] = startX;
+            polygonCoords[1][0] = startY;
+            polygonCoords[2][0] = z;
+            for (int i=1; i < n; i++) {
+                float newX = (float)Math.sin(angle * i) * size * (float)Math.random();
+                float newY = (float)Math.cos(angle * i) * size * (float)Math.random();
+                polygonCoords[0][i] = newX;
+                polygonCoords[1][i] = newY;
+                polygonCoords[2][i] = z;
+            }
+            // polygonCoords is array of array of coords
+            // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
+            return polygonCoords;
+        }
+
+        private float[][] getPolygon() {
+            return adjustedPolygonCoords;
+        }
+
+        private void generatePolygon() {
+            polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);         
+            offsetAdjustedPolygonCoords();
+        }
+
+        private void offsetAdjustedPolygonCoords() {
+            float mX = 0;
+            float mY = 0;
+            float offsetX = width/2;
+            float offsetY = height/2;
+            float offsetZ = 0;
+            if (move) {
+                mX = mouseX;
+                mY = mouseY;
+                offsetX = 0;
+                offsetY = 0;
+            }
+            if (kinect) {
+                mX = 0;
+                mY = 0;
+                offsetX = 0;
+                offsetY = 0;
+            }
+            for (int i=0; i < numPoints; i++) {
+                adjustedPolygonCoords[0][i] = polygon[0][i] + offsetX + mX;
+                adjustedPolygonCoords[1][i] = polygon[1][i] + offsetY + mY;
+                adjustedPolygonCoords[2][i] = polygon[2][i] + offsetZ;
+            }
+        }
+
+        private void drawPolygon() {
+            // polygon is array of array of coords
+            // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
+            int n = polygon[0].length;
+            offsetAdjustedPolygonCoords();
+            fill(clr, 20);
+            stroke(clr, 50);
+            pushMatrix();
+            translate(width/2, height/2, 0);
+            //box(width * .75f, height * .75f, 2);
+            drawBox(width * .75f, height * 1f, 1f, zDepth, clr);
+            popMatrix();
+            if (filled) {
+                fill(clr);
+            } else {
+                noFill();
+            }
+            stroke(clr);
+            strokeWeight(2);
+            fill(0);
+            beginShape();
+            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            for (int i=0; i < n; i++) {
+                //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
+            }
+            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
+            endShape(CLOSE);
+            strokeWeight(1);
+            fill(0);
+            if (debug) {
+                for (int i=0; i < n; i++) {
+                    text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i] );
+                }
+                text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1],adjustedPolygonCoords[2][n-1] );
+            }
+
+        }
+
+        private boolean checkHit(PolygonTarget polygonTarget) {
             int numPlayerPoints = this.numPoints;
             boolean hit = false;
             for (int p = 0; p < numPlayerPoints; p++) {
                 float[] point = {this.getPolygon()[0][p], this.getPolygon()[1][p]};
-                if (pointInPolygon(target, point)) {
+                if (pointInPolygon(polygonTarget, point)) {
                     hit = true;
                 } else {
                     hit = false;

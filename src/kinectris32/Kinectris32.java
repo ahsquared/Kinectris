@@ -2,19 +2,20 @@ package kinectris32;
 
 import java.util.HashMap;
 
-import netP5.*;
-import oscP5.*;
-import processing.core.*;
-
-import javax.swing.JOptionPane;
-
-import beads.*;
-import SimpleOpenNI.*;
-import peasy.*;
-import shapes3d.utils.*;
-import shapes3d.animation.*;
-import shapes3d.*;
-
+import netP5.NetAddress;
+import oscP5.OscMessage;
+import oscP5.OscP5;
+import peasy.PeasyCam;
+import processing.core.PApplet;
+import processing.core.PFont;
+import processing.core.PImage;
+import shapes3d.Box;
+import shapes3d.Shape3D;
+import beads.AudioContext;
+import beads.Gain;
+import beads.Glide;
+import beads.WavePlayer;
+//import geomerative.*;
 
 public class Kinectris32 extends PApplet {
 
@@ -41,7 +42,7 @@ public class Kinectris32 extends PApplet {
     PolygonPlayer polygonPlayer;
     PFont myFont;
     int scorePosX = 100;
-    boolean paused;
+    boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
 
@@ -68,7 +69,10 @@ public class Kinectris32 extends PApplet {
     
     PeasyCam camera;
     
-    Box box;
+    Box box, stage;
+    
+//    RShape wall;
+//    RStyle wallStyle;
 
     public void setup() {
         size(1024, 768, P3D);
@@ -82,8 +86,15 @@ public class Kinectris32 extends PApplet {
         fill(0);
         hint(ENABLE_NATIVE_FONTS);
         textMode(SCREEN);
-        
         camera = new PeasyCam(this, 510, 385, 0, 1150);
+        
+        tex = loadImage("/src/data/chr.jpg");
+        
+//        RG.init( this );
+//        wall = RG.loadShape("/src/data/Toucan.svg");
+//        wallStyle = new RStyle();
+//        wallStyle.texture = tex;
+//        wall.setStyle(wallStyle);
         
         /* setup Kinect */
         /*try {
@@ -132,40 +143,45 @@ public class Kinectris32 extends PApplet {
 
         // initialize kinectData
         kinectData = new KinectData();
-        
-        tex = loadImage("/src/data/chr.jpg");
-        
-        polygonTarget = new PolygonTarget(4, 450, -1500, colT, false, false, false);
-        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, false, true);
+                
+        polygonTarget = new PolygonTarget(4, 650, -1500, colT, false, false, false);
+        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, true, true);
 
-        box = new Box(this);
-        String[] faces = new String[] {
-          "/src/data/chr.jpg", "/src/data/chr.jpg"
-        };
-        box.setTexture("/src/data/chr.jpg", Box.FRONT);
-        box.fill(color(255));
-        box.stroke(color(190));
-        box.strokeWeight(1.2f);
-        box.setSize(100, 100, 100);
-        box.rotateTo(radians(45), radians(45), radians(45));
-        box.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
+//        box = new Box(this);
+//        String[] faces = new String[] {
+//          "/src/data/chr.jpg", "/src/data/chr.jpg"
+//        };
+//        box.setTexture("/src/data/chr.jpg", Box.FRONT);
+//        box.fill(color(255));
+//        box.stroke(color(190));
+//        box.strokeWeight(1.2f);
+//        box.setSize(100, 100, 100);
+//        box.rotateTo(radians(45), radians(45), radians(45));
+//        box.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
 
+        stage = new Box(this);
+        stage.fill(color(255));
+        stage.stroke(color(255));
+        stage.strokeWeight(1.2f);
+        stage.setSize(width, height, 1500);
+        stage.moveTo(width/2, height/2, -1400);
+        stage.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
    }
 
     
-    void oscEvent(OscMessage theOscMessage) {
-    	  /* with theOscMessage.isPlugged() you check if the osc message has already been
-    	   * forwarded to a plugged method. if theOscMessage.isPlugged()==true, it has already 
-    	   * been forwared to another method in your sketch. theOscMessage.isPlugged() can 
-    	   * be used for double posting but is not required.
-    	  */  
-    	  if(theOscMessage.isPlugged()==false) {
-    	  /* print the address pattern and the typetag of the received OscMessage */
-    	  println("### received an osc message.");
-    	  println("### addrpattern\t"+theOscMessage.addrPattern());
-    	  println("### typetag\t"+theOscMessage.typetag());
-    	  }
-    	}
+//    void oscEvent(OscMessage theOscMessage) {
+//    	  /* with theOscMessage.isPlugged() you check if the osc message has already been
+//    	   * forwarded to a plugged method. if theOscMessage.isPlugged()==true, it has already 
+//    	   * been forwared to another method in your sketch. theOscMessage.isPlugged() can 
+//    	   * be used for double posting but is not required.
+//    	  */  
+//    	  if(theOscMessage.isPlugged()==false) {
+//    	  /* print the address pattern and the typetag of the received OscMessage */
+//    	  println("### received an osc message.");
+//    	  println("### addrpattern\t"+theOscMessage.addrPattern());
+//    	  println("### typetag\t"+theOscMessage.typetag());
+//    	  }
+//    	}
 
     public void draw() {
         //kinect.update();
@@ -185,21 +201,18 @@ public class Kinectris32 extends PApplet {
         fill(255,0,0,0);
         //stroke(0);
         int clr = color(255,0,0);
-        drawBox(width * .75f, height * 1f, 1500, -1400, clr);
+        drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
         //box(width * .75f, height * .75f, 1000);
-        popMatrix();
-
-        pushMatrix();
-        translate(width/2, height/2, 0);
-        strokeWeight(10);
-
-        strokeWeight(1);
         popMatrix();
 
         // draw the game pieces
         if (paused) {
             fill(255,0,0);
-            text("Got him", scorePosX, 200, 0);
+            if (hit) {
+            	text("You made it!! :: Score: " + polygonPlayer.score, scorePosX, 100);
+            } else {
+                text("Doh, try again!! :: Score: " + polygonPlayer.score, scorePosX, 100);            	
+            }
             pauseCounter++;
             if (pauseCounter > 30) {
                 paused = false;
@@ -213,18 +226,22 @@ public class Kinectris32 extends PApplet {
             if (polygonTarget.zDepth >= polygonPlayer.zDepth) {
                 if (polygonPlayer.checkHit(polygonTarget)) {
                     polygonPlayer.score++;
-                    text("HIT!! :-) Score: " + polygonPlayer.score, scorePosX, 100);
-                    paused = true;
+                    level++;
+                    hit = true;
                 } else {
-                    text("MISS!! :-( Score: " + polygonPlayer.score, scorePosX, 100);
+                	hit = false;
                 }
+                paused = true;
                 polygonTarget.generatePolygon();
             }
         }
         //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
         //text("Score: " + polygonPlayer.score, scorePosX, 100, 0);
 
-        box.draw();
+        // box.draw();
+        //stage.draw();
+        
+//        RG.shape(wall);
     }
 
 
@@ -362,12 +379,16 @@ public class Kinectris32 extends PApplet {
 
     // an attempt to create a box with transparency for OPENGL
     // not transparent in OPENGL, but does work in P3D
-    public void drawBox(float sizeX, float sizeY, float sizeZ, float offsetZ, int clr) {
+    public void drawBox(float sizeX, float sizeY, float sizeZ, float offsetZ, int clr, boolean filled) {
         pushMatrix();
         translate(0,0, offsetZ);
         scale(sizeX, sizeY, sizeZ);
         beginShape(QUADS);
-        fill(clr, 0);
+        if (filled) {
+        	fill(clr, 100);
+        } else {
+        	fill(clr, 0);
+        }
         stroke(clr);
         //texture(tex);
         // front
@@ -380,7 +401,6 @@ public class Kinectris32 extends PApplet {
         vertex( 1,  1, -1);
         vertex( 1, -1, -1);
         vertex( 1, -1,  1);
-        fill(clr, 0);
 
         vertex( 1,  1, -1);
         vertex(-1,  1, -1);
@@ -406,6 +426,50 @@ public class Kinectris32 extends PApplet {
         popMatrix();
     }
 
+    public void drawSquareCutout(float sizeX, float sizeY, float offsetZ, int clr, boolean filled) {
+        pushMatrix();
+        translate(0,0, offsetZ);
+        // scale(sizeX, sizeY, 1);
+        
+        float[][] adjustedPolygonCoords = polygonTarget.adjustedPolygonCoords;
+        float[][] wall = polygonTarget.wall;
+        int n = polygonTarget.numPoints;
+        beginShape(QUADS);
+        if (filled) {
+        	fill(clr, 100);
+        } else {
+        	fill(clr, 0);
+        }
+        stroke(clr);
+        //texture(tex);
+        // front
+
+//        vertex(-sizeX, -sizeY, 1);
+//        vertex( sizeX, -sizeY, 1);
+//        vertex( sizeX,  sizeY, 1);
+//        vertex(-sizeX,  sizeY, 1);
+//        vertex(-sizeX, -sizeY, 1);
+        
+        vertex(-sizeX/2, -sizeY/2, 1);
+        vertex(-sizeX/2,  sizeY/2, 1);
+        vertex( sizeX/2,  sizeY/2, 1);
+        vertex( sizeX/2, -sizeY/2, 1);
+        vertex(-sizeX/2, -sizeY/2, 1);
+
+        //        vertex(wall[0][n-1], wall[1][n-1], -1);
+//        for (int i=n-1; i > 0; i--) {
+//            vertex(wall[0][i], wall[1][i], -1);
+//            //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+//            //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
+//        }
+//        vertex(wall[0][n-1], wall[1][n-1], -1);
+
+
+        endShape(CLOSE);
+        popMatrix();
+    }
+
+    
     public boolean pointInPolygon(PolygonTarget polygonTarget, float[] p) {
         int i = 0;
         float[][] targetPoints =  polygonTarget.getPolygon();
@@ -500,6 +564,7 @@ public class Kinectris32 extends PApplet {
 
     class PolygonTarget {
         float[][] polygon;
+        float[][] wall;
         int clr;
         boolean move, kinect, filled;
         int numPoints;
@@ -513,6 +578,7 @@ public class Kinectris32 extends PApplet {
             zDepth = ogDepth = z;
             polySize = size;
             adjustedPolygonCoords = new float[3][n];
+            wall = simpleWall(ogDepth);
             clr = c;
             move = m;
             kinect = k;
@@ -548,6 +614,8 @@ public class Kinectris32 extends PApplet {
             return polygonCoords;
         }
         
+        
+        
         private float[][] polygonPathConvexRelative(int n, int size, float z) {
             this.zDepth = z;
             float[][] polygonCoords = new float[3][n];
@@ -574,11 +642,22 @@ public class Kinectris32 extends PApplet {
         }
 
         private void generatePolygon() {
-            if (level == 2) {
-            	polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
-            } else {
-            	polygon = simpleWall(ogDepth);  
-            }            
+        	switch (level) {
+        	case 1:
+        		polygon = simpleWall(ogDepth);
+        		break;
+        	case 2:
+        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		break;
+        	case 3:
+        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		break;
+        	}
+//            if (level == 2) {
+//            	polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+//            } else {
+//            	polygon = simpleWall(ogDepth);  
+//            }            
             offsetAdjustedPolygonCoords();
             resetDeltas();
         }
@@ -611,8 +690,8 @@ public class Kinectris32 extends PApplet {
             float offsetY = height/2;
             float offsetZ = 0;
             if (move) {
-                mX = mouseX;
-                mY = mouseY;
+                mX = mouseX * 1.5f;
+                mY = mouseY * 1.5f;
                 offsetX = 0;
                 offsetY = 0;
             }
@@ -639,7 +718,7 @@ public class Kinectris32 extends PApplet {
             pushMatrix();
             translate(width/2, height/2, 0);
             //box(width * .75f, height * .75f, 2);
-            drawBox(width * .75f, height * 1f, 1f, zDepth, clr);
+            drawBox(width * .75f, height * 1f, 1f, zDepth, clr, true);
             popMatrix();
             if (filled) {
                 fill(clr);
@@ -648,9 +727,10 @@ public class Kinectris32 extends PApplet {
             }
             stroke(clr);
             strokeWeight(2);
-            fill(0);
+            fill(128, 180);
             beginShape();
-            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             for (int i=0; i < n; i++) {
                 vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
                 //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
@@ -773,7 +853,7 @@ public class Kinectris32 extends PApplet {
             pushMatrix();
             translate(width/2, height/2, 0);
             //box(width * .75f, height * .75f, 2);
-            drawBox(width * .75f, height * 1f, 1f, zDepth, clr);
+            drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
             popMatrix();
             if (filled) {
                 fill(clr);

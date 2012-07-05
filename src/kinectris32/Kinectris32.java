@@ -145,7 +145,7 @@ public class Kinectris32 extends PApplet {
         kinectData = new KinectData();
                 
         polygonTarget = new PolygonTarget(4, 650, -1500, colT, false, false, false);
-        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, true, true);
+        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, false, true);
 
 //        box = new Box(this);
 //        String[] faces = new String[] {
@@ -623,7 +623,7 @@ public class Kinectris32 extends PApplet {
             float startX = 0;
             float startY = (float)Math.random() * size;
             polygonCoords[0][0] = startX;
-            polygonCoords[1][0] = startY;
+            polygonCoords[1][0] = height;
             polygonCoords[2][0] = z;
             for (int i=1; i < n; i++) {
                 float newX = (float)Math.sin(angle * i) * size * (float)Math.random();
@@ -652,7 +652,12 @@ public class Kinectris32 extends PApplet {
         	case 3:
         		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
+        	default:
+        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		break;
         	}
+        	
+        		
 //            if (level == 2) {
 //            	polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
 //            } else {

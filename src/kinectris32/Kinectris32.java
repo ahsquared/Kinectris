@@ -144,8 +144,8 @@ public class Kinectris32 extends PApplet {
         // initialize kinectData
         kinectData = new KinectData();
                 
-        polygonTarget = new PolygonTarget(4, 650, -1500, colT, false, false, false);
-        polygonPlayer = new PolygonPlayer(8, 200, -350, colP, true, false, true);
+        polygonTarget = new PolygonTarget(4, 650, -2400, colT, false, false, false);
+        polygonPlayer = new PolygonPlayer(21, 200, -350, colP, true, true, true);
 
 //        box = new Box(this);
 //        String[] faces = new String[] {
@@ -311,34 +311,65 @@ public class Kinectris32 extends PApplet {
         	switch (jointNumber) {
 	        	case 20:{
 	        		polygonPlayer.updateJoint(0, x, y, z);
+	        		polygonPlayer.updateJoint(1, x+.05f, y, z);
 	        		break;
 	        	}
-	        	case 12:{
-	        		polygonPlayer.updateJoint(1, x, y, z);
-	        		break;
-	        	}
-	        	case 9:{
+	        	case 18:{
 	        		polygonPlayer.updateJoint(2, x, y, z);
 	        		break;
 	        	}
-	        	case 4:{
+	        	case 17:{
 	        		polygonPlayer.updateJoint(3, x, y, z);
 	        		break;
 	        	}
-	        	case 5:{
-	        		polygonPlayer.updateJoint(4, x, y, z);
-	        		break;
-	        	}
-	        	case 8:{
+	        	case 10:{
 	        		polygonPlayer.updateJoint(5, x, y, z);
 	        		break;
 	        	}
-	        	case 16:{
+	        	case 12:{
 	        		polygonPlayer.updateJoint(6, x, y, z);
+	        		polygonPlayer.updateJoint(7, x+.02f, y-.03f, z);
+	        		break;
+	        	}
+	        	case 9:{
+	        		polygonPlayer.updateJoint(4, x-.04f, y+.03f, z);
+	        		polygonPlayer.updateJoint(8, x, y, z);
+	        		break;
+	        	}
+	        	case 4:{
+	        		polygonPlayer.updateJoint(9, x, y, z);
+	        		break;
+	        	}
+	        	case 5:{
+	        		polygonPlayer.updateJoint(10, x, y, z);
+	        		polygonPlayer.updateJoint(14, x+.03f, y+.03f, z);
+	        		break;
+	        	}
+	        	case 8:{
+	        		polygonPlayer.updateJoint(11, x, y, z);
+	        		polygonPlayer.updateJoint(12, x+.02f, y+.03f, z);
+	        		break;
+	        	}
+	        	case 6:{
+	        		polygonPlayer.updateJoint(13, x+.03f, y, z);
+	        		break;
+	        	}
+	        	case 13:{
+	        		polygonPlayer.updateJoint(15, x, y, z);
+	        		break;
+	        	}
+	        	case 14:{
+	        		polygonPlayer.updateJoint(16, x, y, z);
+	        		break;
+	        	}
+	        	case 16:{
+	        		polygonPlayer.updateJoint(17, x, y, z);
+	        		polygonPlayer.updateJoint(18, x+.05f, y, z);
 	        		break;
 	        	}
 	        	case 1:{
-	        		polygonPlayer.updateJoint(7, x, y, z);
+	        		polygonPlayer.updateJoint(19, x-.02f, y, z);
+	        		polygonPlayer.updateJoint(20, x+.02f, y, z);
 	        		break;
 	        	}
         	}
@@ -385,7 +416,7 @@ public class Kinectris32 extends PApplet {
         scale(sizeX, sizeY, sizeZ);
         beginShape(QUADS);
         if (filled) {
-        	fill(clr, 100);
+        	fill(clr, 0);
         } else {
         	fill(clr, 0);
         }
@@ -592,7 +623,7 @@ public class Kinectris32 extends PApplet {
         private void resetDeltas() {
             deltaX = ((float)Math.random() * 6) - 3 ;
             deltaY = ((float)Math.random() * 6) - 3;
-            deltaZ = ((float)Math.random() * 10) + 5;
+            deltaZ = ((float)Math.random() * 20) + 20;
         }
         
         private float[][] simpleWall(float z) {
@@ -625,13 +656,16 @@ public class Kinectris32 extends PApplet {
             polygonCoords[0][0] = startX;
             polygonCoords[1][0] = height;
             polygonCoords[2][0] = z;
-            for (int i=1; i < n; i++) {
+            for (int i=1; i < n-1; i++) {
                 float newX = (float)Math.sin(angle * i) * size * (float)Math.random();
                 float newY = (float)Math.cos(angle * i) * size * (float)Math.random();
                 polygonCoords[0][i] = newX;
                 polygonCoords[1][i] = newY;
                 polygonCoords[2][i] = z;
             }
+            polygonCoords[0][n-1] = startX - (float)Math.random() * size;
+            polygonCoords[1][n-1] = height;
+            polygonCoords[2][n-1] = z;
             // polygonCoords is array of array of coords
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
             return polygonCoords;
@@ -647,9 +681,6 @@ public class Kinectris32 extends PApplet {
         		polygon = simpleWall(ogDepth);
         		break;
         	case 2:
-        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
-        		break;
-        	case 3:
         		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
         	default:
@@ -718,30 +749,24 @@ public class Kinectris32 extends PApplet {
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
             int n = polygon[0].length;
             offsetAdjustedPolygonCoords();
-            fill(clr, 20);
+            fill(clr, 0);
             stroke(clr, 50);
             pushMatrix();
             translate(width/2, height/2, 0);
             //box(width * .75f, height * .75f, 2);
             drawBox(width * .75f, height * 1f, 1f, zDepth, clr, true);
             popMatrix();
-            if (filled) {
-                fill(clr);
-            } else {
-                noFill();
-            }
-            stroke(clr);
             strokeWeight(2);
-            fill(128, 180);
             beginShape();
+            texture(tex);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0],adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             for (int i=0; i < n; i++) {
-                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i],adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
                 //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
                 //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0],adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);
@@ -827,7 +852,7 @@ public class Kinectris32 extends PApplet {
             float mX = 0;
             float mY = 0;
             float offsetX = width/2;
-            float offsetY = height/2;
+            float offsetY = height;
             float offsetZ = 0;
             if (move) {
                 mX = mouseX;
@@ -871,11 +896,11 @@ public class Kinectris32 extends PApplet {
             beginShape();
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             for (int i=0; i < n; i++) {
-                //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i], adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
                 curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
                 //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
-            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0], adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);

@@ -45,7 +45,7 @@ public class Kinectris32 extends PApplet {
     boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
-
+    Gem gem = new Gem();
     // Levels
     int level = 1;
     
@@ -166,6 +166,7 @@ public class Kinectris32 extends PApplet {
         stage.setSize(width, height, 1500);
         stage.moveTo(width/2, height/2, -1400);
         stage.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
+        stage.setTexture("/src/data/chr.jpg", Box.BOTTOM);
    }
 
     
@@ -187,12 +188,13 @@ public class Kinectris32 extends PApplet {
         //kinect.update();
 
         background(0);
-        // draw the bg stars
         
-        //pushMatrix();
-        //translate(0,0,-1600);
-        //drawStars();
-        //popMatrix();
+        // draw the bg stars
+//        pushMatrix();
+//        translate(0,0,-1600);
+//        drawStars();
+//        popMatrix();
+        
         fill(255,0,0, 200);
 
         // draw the game stage
@@ -201,7 +203,7 @@ public class Kinectris32 extends PApplet {
         fill(255,0,0,0);
         //stroke(0);
         int clr = color(255,0,0);
-        drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
+        //drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
         //box(width * .75f, height * .75f, 1000);
         popMatrix();
 
@@ -222,6 +224,7 @@ public class Kinectris32 extends PApplet {
             polygonTarget.shootPolygon(polygonTarget.deltaX, polygonTarget.deltaY, polygonTarget.deltaZ);
             polygonTarget.drawPolygon();
             polygonPlayer.drawPolygon();
+            gem.draw();
             // check to see if hit target
             if (polygonTarget.zDepth >= polygonPlayer.zDepth) {
                 if (polygonPlayer.checkHit(polygonTarget)) {
@@ -239,7 +242,7 @@ public class Kinectris32 extends PApplet {
         //text("Score: " + polygonPlayer.score, scorePosX, 100, 0);
 
         // box.draw();
-        //stage.draw();
+        stage.draw();
         
 //        RG.shape(wall);
     }
@@ -268,6 +271,41 @@ public class Kinectris32 extends PApplet {
         }
         private void draw() {
             ellipse(x, y, size, size);
+        }
+    }
+    
+    class Gem{
+    	float size;
+    	float x;
+    	float y;
+    	float z = -1500;
+    	
+    	Gem() {
+			initPosition();
+        }
+    	private void updatePosition() {
+    		if ( z < 300) {
+    			fill(255);
+	    		x += ((float)Math.random() - 0.5f) * 20;
+	    		y += ((float)Math.random() - 0.5f) * 5;
+	    		z += ((float)Math.random() * 20) + 20;
+    		} else {
+    			initPosition();
+    		}
+    		
+    	}
+    	private void initPosition() {
+            size = (float)Math.random() * 200;
+            x = ((float)Math.random() - 0.5f) * width;
+            y = ((float)Math.random() - 0.5f) * height;
+            z = -1500;
+    	}
+        private void draw() {
+        	updatePosition();
+        	pushMatrix();
+        	translate(x,y,z);
+            ellipse(x, y, size, size);
+            popMatrix();
         }
     }
 

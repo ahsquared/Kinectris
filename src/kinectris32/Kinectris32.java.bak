@@ -6,6 +6,7 @@ import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
 import peasy.PeasyCam;
+import processing.opengl.*;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
@@ -28,7 +29,13 @@ public class Kinectris32 extends PApplet {
     }
     */
 
-    // debug mode switch
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+
+	// debug mode switch
     public static boolean debug = false;
     
 
@@ -45,7 +52,7 @@ public class Kinectris32 extends PApplet {
     boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
-    Gem gem = new Gem();
+    Gem gem = new Gem(this);
     // Levels
     int level = 1;
     
@@ -69,16 +76,18 @@ public class Kinectris32 extends PApplet {
     
     PeasyCam camera;
     
-    Box box, stage;
+    Box box, stage, boxTarget;
     
+    int stageColor = color(186, 0, 203);
+    int lineColor = color(235, 221, 0);
 //    RShape wall;
 //    RStyle wallStyle;
-
+    
     public void setup() {
-        size(1024, 768, P3D);
-        float fov = PI/3.0f;
+        size(1024, 768, OPENGL);
+        float fov = PI/2.5f;
         float cameraZ = (height/2.0f) / tan(PI*60.0f/360.0f);
-        perspective(PI/3.0f, width/height, cameraZ/10.0f, cameraZ*10.0f);
+        perspective(fov, width/height, cameraZ/10.0f, cameraZ*10.0f);
         //perspective(radians(45), width/height, 10f,150000f);
         frameRate(30);
         myFont = createFont("Arial", 20);
@@ -145,68 +154,51 @@ public class Kinectris32 extends PApplet {
         kinectData = new KinectData();
                 
         polygonTarget = new PolygonTarget(4, 650, -2400, colT, false, false, false);
-        polygonPlayer = new PolygonPlayer(21, 200, -350, colP, true, true, true);
-
-//        box = new Box(this);
-//        String[] faces = new String[] {
-//          "/src/data/chr.jpg", "/src/data/chr.jpg"
-//        };
-//        box.setTexture("/src/data/chr.jpg", Box.FRONT);
-//        box.fill(color(255));
-//        box.stroke(color(190));
-//        box.strokeWeight(1.2f);
-//        box.setSize(100, 100, 100);
-//        box.rotateTo(radians(45), radians(45), radians(45));
-//        box.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
+        polygonPlayer = new PolygonPlayer(21, 200, 0, colP, true, true, false);
 
         stage = new Box(this);
-        stage.fill(color(255));
-        stage.stroke(color(255));
-        stage.strokeWeight(1.2f);
-        stage.setSize(width, height, 1500);
-        stage.moveTo(width/2, height/2, -1400);
-        stage.drawMode(Shape3D.TEXTURE | Shape3D.WIRE);
-        stage.setTexture("/src/data/chr.jpg", Box.BOTTOM);
-   }
+        stage.fill(color(stageColor));
+        stage.stroke(color(lineColor));
+        stage.strokeWeight(2f);
+        stage.setSize(width*1.5f, height*2f, 4000);
+        stage.moveTo(width/2, height/2, -1900);
+        stage.drawMode(Shape3D.TEXTURE);
+        stage.drawMode(Shape3D.WIRE, Box.FRONT);
+        stage.setTexture("/src/data/purple-wall.png", Box.BOTTOM);
+        stage.setTexture("/src/data/purple-wall.png", Box.RIGHT);
+        stage.setTexture("/src/data/purple-wall.png", Box.LEFT);
+        stage.setTexture("/src/data/purple-wall.png", Box.TOP);
 
+    }
     
-//    void oscEvent(OscMessage theOscMessage) {
-//    	  /* with theOscMessage.isPlugged() you check if the osc message has already been
-//    	   * forwarded to a plugged method. if theOscMessage.isPlugged()==true, it has already 
-//    	   * been forwared to another method in your sketch. theOscMessage.isPlugged() can 
-//    	   * be used for double posting but is not required.
-//    	  */  
-//    	  if(theOscMessage.isPlugged()==false) {
-//    	  /* print the address pattern and the typetag of the received OscMessage */
-//    	  println("### received an osc message.");
-//    	  println("### addrpattern\t"+theOscMessage.addrPattern());
-//    	  println("### typetag\t"+theOscMessage.typetag());
-//    	  }
-//    	}
-
     public void draw() {
         //kinect.update();
 
         background(0);
-        
+        //directionalLight(51, 102, 126, -1, 0, 0);
         // draw the bg stars
 //        pushMatrix();
 //        translate(0,0,-1600);
 //        drawStars();
 //        popMatrix();
         
+        
+//        pushMatrix();
+//        translate(width/2, height/2, 0);
+//        fill(255,0,0,0);
+//        //stroke(0);
+//        int clr = color(255,0,0);
+//        //drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
+//        
+//        //box(width * .75f, height * .75f, 1000);
+//        popMatrix();
+        
         fill(255,0,0, 200);
 
         // draw the game stage
-        pushMatrix();
-        translate(width/2, height/2, -300);
-        fill(255,0,0,0);
-        //stroke(0);
-        int clr = color(255,0,0);
-        //drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
-        //box(width * .75f, height * .75f, 1000);
-        popMatrix();
+        stage.draw();
 
+        
         // draw the game pieces
         if (paused) {
             fill(255,0,0);
@@ -222,11 +214,13 @@ public class Kinectris32 extends PApplet {
             }
         } else {
             polygonTarget.shootPolygon(polygonTarget.deltaX, polygonTarget.deltaY, polygonTarget.deltaZ);
-            polygonTarget.drawPolygon();
+            //polygonTarget.drawPolygon();
             polygonPlayer.drawPolygon();
             gem.draw();
-            // check to see if hit target
+            
+            // if the target has reached the player
             if (polygonTarget.zDepth >= polygonPlayer.zDepth) {
+                // check to see if hit target
                 if (polygonPlayer.checkHit(polygonTarget)) {
                     polygonPlayer.score++;
                     level++;
@@ -237,12 +231,16 @@ public class Kinectris32 extends PApplet {
                 paused = true;
                 polygonTarget.generatePolygon();
             }
+            
+            // if the gem has reached the player
+            if (gem.zDepth >= polygonPlayer.zDepth) {
+            // check to see if the player has caught a gem
+            }
         }
         //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
         //text("Score: " + polygonPlayer.score, scorePosX, 100, 0);
 
         // box.draw();
-        stage.draw();
         
 //        RG.shape(wall);
     }
@@ -275,36 +273,43 @@ public class Kinectris32 extends PApplet {
     }
     
     class Gem{
+    	PApplet parent;
     	float size;
-    	float x;
-    	float y;
-    	float z = -1500;
-    	
-    	Gem() {
+    	float xOff;
+    	float yOff;
+    	float zDepth;
+    	float x,y;
+    	float increment = 0.01f;
+    	Gem(PApplet p) {
+    		parent = p;
 			initPosition();
         }
     	private void updatePosition() {
-    		if ( z < 300) {
+    		xOff += increment;
+    		if ( zDepth < 1000) {
     			fill(255);
-	    		x += ((float)Math.random() - 0.5f) * 20;
-	    		y += ((float)Math.random() - 0.5f) * 5;
-	    		z += ((float)Math.random() * 20) + 20;
+                x = (parent.noise(xOff)*width * 0.75f) - width/8;
+                y = (parent.noise(yOff)*height) - height/4;
+         		zDepth += ((float)Math.random() * 20) + 0;
     		} else {
     			initPosition();
     		}
-    		
     	}
     	private void initPosition() {
-            size = (float)Math.random() * 200;
-            x = ((float)Math.random() - 0.5f) * width;
-            y = ((float)Math.random() - 0.5f) * height;
-            z = -1500;
-    	}
+            size = parent.random(10,50);
+            xOff = 0f + parent.random(100);
+            yOff = 20f + parent.random(100);
+            x = parent.noise(xOff)*width;
+            y = parent.noise(yOff)*width;
+            zDepth = -2500;
+   	}
         private void draw() {
         	updatePosition();
+        	directionalLight(51, 102, 126, -1, 0, 0);
         	pushMatrix();
-        	translate(x,y,z);
-            ellipse(x, y, size, size);
+        	translate(x,y,zDepth);
+        	noStroke();
+            parent.sphere(size);
             popMatrix();
         }
     }
@@ -459,6 +464,7 @@ public class Kinectris32 extends PApplet {
         	fill(clr, 0);
         }
         stroke(clr);
+        strokeWeight(2f);
         //texture(tex);
         // front
         vertex(-1,  1,  1);
@@ -642,7 +648,8 @@ public class Kinectris32 extends PApplet {
         int polySize;
         float deltaX, deltaY, deltaZ;
         int score, lives;
-
+        shapes3d.Box boxTarget;
+        
         PolygonTarget(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
             zDepth = ogDepth = z;
             polySize = size;
@@ -655,6 +662,15 @@ public class Kinectris32 extends PApplet {
             numPoints = n;
             score = 0;
             lives = 5;
+
+            boxTarget = new Box(kinectris32.Kinectris32.this);
+            boxTarget.fill(color(stageColor));
+            boxTarget.stroke(color(lineColor));
+            boxTarget.strokeWeight(2f);
+            boxTarget.setSize(width * 1.5f, height*2f, 10);
+            boxTarget.moveTo(width/2, height/2, 0);
+            boxTarget.drawMode(Shape3D.TEXTURE | Shape3D.WIRE, Box.FRONT);
+            //boxTarget.setTexture("/src/data/chr.jpg", Box.FRONT);
             generatePolygon();
         }
 
@@ -792,19 +808,22 @@ public class Kinectris32 extends PApplet {
             pushMatrix();
             translate(width/2, height/2, 0);
             //box(width * .75f, height * .75f, 2);
-            drawBox(width * .75f, height * 1f, 1f, zDepth, clr, true);
+            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, true);
             popMatrix();
+            boxTarget.moveTo(width/2, height/2, zDepth-20);
+            boxTarget.draw();
             strokeWeight(2);
+            fill(0);
             beginShape();
-            texture(tex);
+            //texture(tex);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0],adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             for (int i=0; i < n; i++) {
-                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i],adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
+                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]); //, adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
                 //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
                 //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0],adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
+            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);
@@ -841,7 +860,8 @@ public class Kinectris32 extends PApplet {
         int polySize;
         float deltaX, deltaY, deltaZ;
         int score, lives;
-
+        Box boxPlayer;
+        
         PolygonPlayer(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
             zDepth = ogDepth = z;
             polySize = size;
@@ -853,6 +873,13 @@ public class Kinectris32 extends PApplet {
             numPoints = n;
             score = 0;
             lives = 5;
+            boxPlayer = new Box(kinectris32.Kinectris32.this);
+            boxPlayer.fill(color(stageColor));
+            boxPlayer.stroke(color(lineColor));
+            boxPlayer.strokeWeight(2f);
+            boxPlayer.setSize(width * 1.5f, height*2f, 4);
+            boxPlayer.moveTo(width/2, height/2, 0);
+            boxPlayer.drawMode(Shape3D.WIRE);
             generatePolygon();
         }
         
@@ -916,33 +943,42 @@ public class Kinectris32 extends PApplet {
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
             int n = polygon[0].length;
             offsetAdjustedPolygonCoords();
-            fill(clr, 20);
-            stroke(clr, 50);
-            pushMatrix();
-            translate(width/2, height/2, 0);
-            //box(width * .75f, height * .75f, 2);
-            drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
-            popMatrix();
+//            fill(clr, 20);
+//            stroke(clr, 50);
+//            pushMatrix();
+//            translate(width/2, height/2, 0);
+//            //box(width * .75f, height * .75f, 2);
+//            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
+//            popMatrix();
+            boxPlayer.moveTo(width/2, height/2, zDepth-20);
+            boxPlayer.draw();
+
             if (filled) {
                 fill(clr);
             } else {
                 noFill();
             }
             stroke(clr);
-            strokeWeight(2);
-            fill(0);
+            strokeWeight(2f);
             beginShape();
-            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);
             for (int i=0; i < n; i++) {
                 //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i], adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
-                curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+                curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]+1);
                 //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
             //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0], adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);
-            strokeWeight(1);
+            directionalLight(51, 102, 126, -1, 0, 0);
+        	pushMatrix();
+        	translate(adjustedPolygonCoords[0][6],adjustedPolygonCoords[1][6],zDepth-15);
+        	noStroke();
+        	fill(128);
+            sphere(30);
+            popMatrix();
+            strokeWeight(1f);
             fill(0);
             if (debug) {
                 for (int i=0; i < n; i++) {

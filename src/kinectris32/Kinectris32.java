@@ -117,7 +117,7 @@ public class Kinectris32 extends PApplet {
         textMode(SCREEN);
         camera = new PeasyCam(this, 510, 385, 0, 1150);
         
-        tex = loadImage("/src/data/chr.jpg");
+        tex = loadImage("/src/data/KAMEN-stup.jpg");
         
 //        RG.init( this );
 //        wall = RG.loadShape("/src/data/Toucan.svg");
@@ -173,7 +173,7 @@ public class Kinectris32 extends PApplet {
         // initialize kinectData
         kinectData = new KinectData();
                 
-        polygonTarget = new PolygonTarget(4, 650, -1800, colT, false, false, false);
+        polygonTarget = new PolygonTarget(this, 4, 650, -3500, colT, false, false, false);
         polygonPlayer = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
 
         stage = new Box(this);
@@ -269,7 +269,7 @@ public class Kinectris32 extends PApplet {
         		polygonPlayer.gemScore++;
         	}
         	if (!targetComing) gem.initPosition();
-        	if (gem.gemRounds % 4 == 0) {
+        	if (gem.gemRounds % 1 == 0) {
         		targetComing = true;
         	}
         }
@@ -365,7 +365,7 @@ public class Kinectris32 extends PApplet {
                 x = random(width, width*1.25f);            	
             }
             y = random(-height/2, height*1.5f); // or parent.random(height, height*1.5f);
-            zDepth = -2500;
+            zDepth = -3500;
             gemRounds++;
    	}
         private void draw() {
@@ -725,8 +725,11 @@ public class Kinectris32 extends PApplet {
         float deltaX, deltaY, deltaZ;
         int score, lives;
         shapes3d.Box boxTarget;
+        PApplet parent;
+        float wallSize;
         
-        PolygonTarget(int n, int size, float z, int c, boolean m, boolean k, boolean f) {
+        PolygonTarget(PApplet p, int n, int size, float z, int c, boolean m, boolean k, boolean f) {
+        	parent = p;
             zDepth = ogDepth = z;
             polySize = size;
             adjustedPolygonCoords = new float[3][n];
@@ -738,15 +741,18 @@ public class Kinectris32 extends PApplet {
             numPoints = n;
             score = 0;
             lives = 5;
-
+            wallSize = resetWallSize();
+            
             boxTarget = new Box(kinectris32.Kinectris32.this);
             boxTarget.fill(color(stageColor));
             boxTarget.stroke(color(lineColor));
             boxTarget.strokeWeight(2f);
             boxTarget.setSize(width * 1.5f, height*2f, 10);
             boxTarget.moveTo(width/2, height/2, 0);
-            boxTarget.drawMode(Shape3D.TEXTURE | Shape3D.WIRE, Box.FRONT);
+            boxTarget.drawMode(Shape3D.TEXTURE);
             boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.FRONT);
+            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.LEFT);
+            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.RIGHT);
             generatePolygon();
         }
 
@@ -756,6 +762,10 @@ public class Kinectris32 extends PApplet {
             deltaZ = ((float)Math.random() * 20) + 20;
         }
         
+        private float resetWallSize() {
+        	float size = parent.random(.3f,5);
+        	return size;
+        }
         private float[][] simpleWall(float z) {
         	this.zDepth = z;
         	float[][] polygonCoords = new float[3][4];
@@ -806,6 +816,7 @@ public class Kinectris32 extends PApplet {
         }
 
         private void generatePolygon() {
+        	wallSize = resetWallSize();
         	switch (level) {
         	case 1:
         		polygon = simpleWall(ogDepth);
@@ -869,6 +880,23 @@ public class Kinectris32 extends PApplet {
             }
         }
 
+        private void drawWall() {
+            switch (level) {
+        	case 1:
+                float newWidth = width/wallSize;
+                boxTarget.setSize(newWidth, height*2f, 50);
+                boxTarget.moveTo((newWidth/2) - width/4, height/2, zDepth-10);
+                boxTarget.draw();  
+        		break;
+        	case 2:
+        		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		break;
+        	default:
+        		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		break;
+        	}
+        }
+        
         private void drawPolygon() {
             // polygon is array of array of coords
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
@@ -876,25 +904,31 @@ public class Kinectris32 extends PApplet {
             offsetAdjustedPolygonCoords();
             fill(clr, 0);
             stroke(clr, 50);
-            boxTarget.moveTo(width/2, height/2, zDepth-10);
-            boxTarget.setSize(width/5, height, 1);
-            boxTarget.draw();
+            drawWall();
             strokeWeight(2);
-            fill(0);
-//            beginShape();
-//            texture(tex);
-//            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-//            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            noFill();
+            beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(-width/4, -height/2, adjustedPolygonCoords[2][0],0,0);
+            vertex(width*5/4, -height/2, adjustedPolygonCoords[2][0],1,0);
+            vertex(width*5/4, height*1.5f, adjustedPolygonCoords[2][0],1,1);
+            vertex(width, height*1.5f, adjustedPolygonCoords[2][0],.8f,1);
+            vertex(width, height/2, adjustedPolygonCoords[2][0],.8f,.6f);
+            vertex(width/2, height/2, adjustedPolygonCoords[2][0],.4f,.6f);
+            vertex(width/2, height*1.5f, adjustedPolygonCoords[2][0],.4f,1);
+            vertex(-width/4, height*1.5f, adjustedPolygonCoords[2][0],0,1);
+            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
 //            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
 //            for (int i=0; i < n; i++) {
 //                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]); //, adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
 //                //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-//                //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
+//                text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
 //            }
 //            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-//            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-//            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
-//            endShape(CLOSE);
+            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
+            endShape(CLOSE);
             strokeWeight(1);
             fill(0);
             if (debug) {

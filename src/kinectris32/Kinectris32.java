@@ -173,7 +173,7 @@ public class Kinectris32 extends PApplet {
         // initialize kinectData
         kinectData = new KinectData();
                 
-        polygonTarget = new PolygonTarget(4, 650, -2400, colT, false, false, false);
+        polygonTarget = new PolygonTarget(4, 650, -1800, colT, false, false, false);
         polygonPlayer = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
 
         stage = new Box(this);
@@ -185,10 +185,10 @@ public class Kinectris32 extends PApplet {
         stage.drawMode(Shape3D.TEXTURE);
         stage.drawMode(Shape3D.WIRE, Box.FRONT);
         //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/purple-wall.png", Box.BOTTOM);
-        stage.setTexture("/src/data/purple-wall.png", Box.RIGHT);
-        stage.setTexture("/src/data/purple-wall.png", Box.LEFT);
-        stage.setTexture("/src/data/purple-wall.png", Box.TOP);
+        stage.setTexture("/src/data/KAMEN-stup.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
+        stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
+        stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         terrain = new Terrain(this, 60, terrainSize, horizon);
         terrain.usePerlinNoiseMap(0, 40, 0.15f, 0.15f);
@@ -375,7 +375,7 @@ public class Kinectris32 extends PApplet {
         	pushMatrix();
         	translate(x,y,zDepth);
         	noStroke();
-        	fill(255);
+        	fill(255, 0, 0);
             parent.sphere(size);
             fill(0, 80);
             translate(0,height*1.5f-y-10, 0);
@@ -746,7 +746,7 @@ public class Kinectris32 extends PApplet {
             boxTarget.setSize(width * 1.5f, height*2f, 10);
             boxTarget.moveTo(width/2, height/2, 0);
             boxTarget.drawMode(Shape3D.TEXTURE | Shape3D.WIRE, Box.FRONT);
-            //boxTarget.setTexture("/src/data/chr.jpg", Box.FRONT);
+            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.FRONT);
             generatePolygon();
         }
 
@@ -876,28 +876,25 @@ public class Kinectris32 extends PApplet {
             offsetAdjustedPolygonCoords();
             fill(clr, 0);
             stroke(clr, 50);
-            pushMatrix();
-            translate(width/2, height/2, 0);
-            //box(width * .75f, height * .75f, 2);
-            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, true);
-            popMatrix();
-            boxTarget.moveTo(width/2, height/2, zDepth-20);
+            boxTarget.moveTo(width/2, height/2, zDepth-10);
+            boxTarget.setSize(width/5, height, 1);
             boxTarget.draw();
             strokeWeight(2);
             fill(0);
-            beginShape();
-            //texture(tex);
-            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-            for (int i=0; i < n; i++) {
-                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]); //, adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
-                //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-                //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
-            }
-            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
-            endShape(CLOSE);
+//            beginShape();
+//            texture(tex);
+//            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+//            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+//            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
+//            for (int i=0; i < n; i++) {
+//                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]); //, adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
+//                //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+//                //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
+//            }
+//            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
+//            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
+//            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
+//            endShape(CLOSE);
             strokeWeight(1);
             fill(0);
             if (debug) {
@@ -1039,7 +1036,7 @@ public class Kinectris32 extends PApplet {
                 noFill();
             }
             stroke(clr);
-            strokeWeight(2f);
+            strokeWeight(4f);
             footRightY = adjustedPolygonCoords[1][0];
             footLeftY = adjustedPolygonCoords[1][17];
             floorOffset = Math.min(height*1.5f - footRightY, height*1.5f - footLeftY);

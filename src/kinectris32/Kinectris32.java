@@ -65,8 +65,11 @@ public class Kinectris32 extends PApplet {
     float yOffset = 0;
     float playerScaleFactor = 1.5f;
     
+    // screen dimensions
+    float rightEdge, leftEdge, topEdge, bottomEdge, totalWidth, totalHeight;
+
     // Levels
-    int level = 1;
+    int level = 2;
     
     // create 3d model
     ObjImpScene scene;
@@ -105,6 +108,12 @@ public class Kinectris32 extends PApplet {
     
     public void setup() {
         size(1024, 768, OPENGL);
+        rightEdge = width*5/4;
+        leftEdge = -width/4;
+        topEdge = -height/2;
+        bottomEdge = height*1.5f;
+        totalWidth = rightEdge - leftEdge;
+        totalHeight = bottomEdge - topEdge;
         float fov = PI/2.5f;
         float cameraZ = (height/2.0f) / tan(PI*60.0f/360.0f);
         perspective(fov, width/height, cameraZ/10.0f, cameraZ*10.0f);
@@ -117,7 +126,7 @@ public class Kinectris32 extends PApplet {
         textMode(SCREEN);
         camera = new PeasyCam(this, 510, 385, 0, 1150);
         
-        tex = loadImage("/src/data/KAMEN-stup.jpg");
+        tex = loadImage("/src/data/KAMEN.jpg");
         
 //        RG.init( this );
 //        wall = RG.loadShape("/src/data/Toucan.svg");
@@ -185,7 +194,7 @@ public class Kinectris32 extends PApplet {
         stage.drawMode(Shape3D.TEXTURE);
         stage.drawMode(Shape3D.WIRE, Box.FRONT);
         //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/KAMEN-stup.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/sky.jpg", Box.BOTTOM);
         stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
         stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         stage.setTexture("/src/data/sky.jpg", Box.TOP);
@@ -727,11 +736,14 @@ public class Kinectris32 extends PApplet {
         shapes3d.Box boxTarget;
         PApplet parent;
         float wallSize;
-        
+        float bottomRightX, topRightX, topRightY, topLeftX, topLeftY, bottomLeftX;
+        float bottomRightU, topRightU, topRightV, topLeftU, topLeftV, bottomLeftU;
+
         PolygonTarget(PApplet p, int n, int size, float z, int c, boolean m, boolean k, boolean f) {
         	parent = p;
             zDepth = ogDepth = z;
             polySize = size;
+            polygon = new float[0][0];
             adjustedPolygonCoords = new float[3][n];
             wall = simpleWall(ogDepth);
             clr = c;
@@ -750,13 +762,14 @@ public class Kinectris32 extends PApplet {
             boxTarget.setSize(width * 1.5f, height*2f, 10);
             boxTarget.moveTo(width/2, height/2, 0);
             boxTarget.drawMode(Shape3D.TEXTURE);
-            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.FRONT);
+            boxTarget.setTexture("/src/data/KAMEN.jpg", Box.FRONT);
             boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.LEFT);
             boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.RIGHT);
             generatePolygon();
         }
 
         private void resetDeltas() {
+        	zDepth = ogDepth;
             deltaX = ((float)Math.random() * 6) - 3 ;
             deltaY = ((float)Math.random() * 6) - 3;
             deltaZ = ((float)Math.random() * 20) + 20;
@@ -766,6 +779,7 @@ public class Kinectris32 extends PApplet {
         	float size = parent.random(.3f,5);
         	return size;
         }
+
         private float[][] simpleWall(float z) {
         	this.zDepth = z;
         	float[][] polygonCoords = new float[3][4];
@@ -816,16 +830,19 @@ public class Kinectris32 extends PApplet {
         }
 
         private void generatePolygon() {
-        	wallSize = resetWallSize();
+        	//println(level);
         	switch (level) {
         	case 1:
+            	wallSize = resetWallSize();
         		polygon = simpleWall(ogDepth);
         		break;
         	case 2:
-        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		generateWallCutout();
+        		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
         	default:
-        		polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
+        		generateWallCutout();
+        		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
         	}
         	
@@ -842,42 +859,46 @@ public class Kinectris32 extends PApplet {
         private void updatePolygonPosition(float deltaX, float deltaY, float deltaZ) {
             float newZ;
             zDepth += deltaZ;
-            if (numPoints > 4) {
-	            for (int i = 0; i < numPoints; i++) {
-	                polygon[0][i] += deltaX;
-	                polygon[1][i] += deltaY;
-	                polygon[2][i] = zDepth;
+        	if (polygon.length != 0) {
+	            if (numPoints > 4) {
+		            for (int i = 0; i < numPoints; i++) {
+		                polygon[0][i] += deltaX;
+		                polygon[1][i] += deltaY;
+		                polygon[2][i] = zDepth;
+		            }
+	            } else {
+		            for (int i = 0; i < numPoints; i++) {
+		                polygon[2][i] = zDepth;
+		            }          	
 	            }
-            } else {
-	            for (int i = 0; i < numPoints; i++) {
-	                polygon[2][i] = zDepth;
-	            }          	
-            }
+        	}
         }
 
         private void offsetAdjustedPolygonCoords() {
-            float mX = 0;
-            float mY = 0;
-            float offsetX = width/2;
-            float offsetY = height/2;
-            float offsetZ = 0;
-            if (move) {
-                mX = mouseX * 1.5f;
-                mY = mouseY * 1.5f;
-                offsetX = 0;
-                offsetY = 0;
-            }
-            if (kinect) {
-                mX = 0;
-                mY = 0;
-                offsetX = 0;
-                offsetY = 0;
-            }
-            for (int i=0; i < numPoints; i++) {
-                adjustedPolygonCoords[0][i] = polygon[0][i] + offsetX + mX;
-                adjustedPolygonCoords[1][i] = polygon[1][i] + offsetY + mY;
-                adjustedPolygonCoords[2][i] = polygon[2][i] + offsetZ;
-            }
+        	if (polygon.length != 0) {
+	            float mX = 0;
+	            float mY = 0;
+	            float offsetX = width/2;
+	            float offsetY = height/2;
+	            float offsetZ = 0;
+	            if (move) {
+	                mX = mouseX * 1.5f;
+	                mY = mouseY * 1.5f;
+	                offsetX = 0;
+	                offsetY = 0;
+	            }
+	            if (kinect) {
+	                mX = 0;
+	                mY = 0;
+	                offsetX = 0;
+	                offsetY = 0;
+	            }
+	            for (int i=0; i < numPoints; i++) {
+	                adjustedPolygonCoords[0][i] = polygon[0][i] + offsetX + mX;
+	                adjustedPolygonCoords[1][i] = polygon[1][i] + offsetY + mY;
+	                adjustedPolygonCoords[2][i] = polygon[2][i] + offsetZ;
+	            }
+        	}
         }
 
         private void drawWall() {
@@ -885,39 +906,75 @@ public class Kinectris32 extends PApplet {
         	case 1:
                 float newWidth = width/wallSize;
                 boxTarget.setSize(newWidth, height*2f, 50);
-                boxTarget.moveTo((newWidth/2) - width/4, height/2, zDepth-10);
+                boxTarget.moveTo(leftEdge, height/2, zDepth-10);
                 boxTarget.draw();  
         		break;
         	case 2:
+        		drawWallWithCutout();
         		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
         	default:
+        		drawWallWithCutout();
         		//polygon = polygonPathConvexRelative(numPoints, polySize, ogDepth);
         		break;
         	}
         }
         
+        private void generateWallCutout() {
+            bottomRightX = width/2; //parent.random(0, width);
+            topRightX = width/2; //parent.random(0, width);
+            topRightY = height/2; //parent.random(0, height/2);
+            topLeftX = 0; //parent.random(0, topRightX);
+            topLeftY = height/2; //parent.random(0, height/2);
+            bottomLeftX = 0; //parent.random(0, bottomRightX);
+            bottomRightU = bottomRightX / width;
+            topRightU = topRightX / width;
+            topRightV = .5f; //Math.abs((float)topRightY / totalHeight);
+            topLeftU = .1666f; //topLeftX / width;
+            topLeftV = .5f; //Math.abs((float)topLeftY / totalHeight);
+            bottomLeftU = .1666f; //bottomLeftX / totalWidth;
+//            println(bottomRightX);
+//            println(topRightX);
+//            println(topRightY);
+//            println(topLeftX);
+//            println(topLeftY);
+//            println(bottomLeftX);
+            
+        }
+        
+        private void drawWallWithCutout() {
+        	beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(leftEdge, topEdge, zDepth,0,0);
+            vertex(rightEdge, topEdge, zDepth,1,0);
+            vertex(rightEdge, bottomEdge, zDepth,1,1);
+            // begin cutout
+            vertex(bottomRightX, bottomEdge, zDepth,bottomRightU,1);
+            vertex(topRightX, topRightY, zDepth,topRightU,topRightV);
+            vertex(topLeftX, topLeftY, zDepth,topLeftU, topLeftV);
+            vertex(bottomLeftX, bottomEdge, zDepth,bottomLeftU,1);
+            // end cutout
+            vertex(leftEdge, bottomEdge, zDepth,0,1);
+            endShape(CLOSE);
+        }
+        
         private void drawPolygon() {
             // polygon is array of array of coords
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
-            int n = polygon[0].length;
-            offsetAdjustedPolygonCoords();
+        	int n = 0;
+            if (polygon.length != 0) {
+            	n = polygon[0].length;
+            	offsetAdjustedPolygonCoords();
+            }
             fill(clr, 0);
             stroke(clr, 50);
             drawWall();
             strokeWeight(2);
             noFill();
             beginShape();
-            textureMode(NORMALIZED);
-            texture(tex);
-            vertex(-width/4, -height/2, adjustedPolygonCoords[2][0],0,0);
-            vertex(width*5/4, -height/2, adjustedPolygonCoords[2][0],1,0);
-            vertex(width*5/4, height*1.5f, adjustedPolygonCoords[2][0],1,1);
-            vertex(width, height*1.5f, adjustedPolygonCoords[2][0],.8f,1);
-            vertex(width, height/2, adjustedPolygonCoords[2][0],.8f,.6f);
-            vertex(width/2, height/2, adjustedPolygonCoords[2][0],.4f,.6f);
-            vertex(width/2, height*1.5f, adjustedPolygonCoords[2][0],.4f,1);
-            vertex(-width/4, height*1.5f, adjustedPolygonCoords[2][0],0,1);
+//            textureMode(NORMALIZED);
+//            texture(tex);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
 //            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
 //            for (int i=0; i < n; i++) {
@@ -928,7 +985,7 @@ public class Kinectris32 extends PApplet {
 //            vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
             //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
-            endShape(CLOSE);
+//            endShape(CLOSE);
             strokeWeight(1);
             fill(0);
             if (debug) {

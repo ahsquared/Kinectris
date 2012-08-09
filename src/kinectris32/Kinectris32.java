@@ -119,7 +119,7 @@ public class Kinectris32 extends PApplet {
         fill(0);
         hint(ENABLE_NATIVE_FONTS);
         textMode(SCREEN);
-        camera = new PeasyCam(this, 510, 385, 0, 1150);
+        camera = new PeasyCam(this, width/2, height/2, 0, 1150);
         
         tex = loadImage("/src/data/KAMEN.jpg");
         

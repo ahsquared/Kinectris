@@ -16,10 +16,7 @@ import shapes3d.Shape3D;
 import shapes3d.utils.*;
 import shapes3d.animation.*;
 import shapes3d.*;
-import beads.AudioContext;
-import beads.Gain;
-import beads.Glide;
-import beads.WavePlayer;
+import beads.*;
 import objimp.*;
 
 //import geomerative.*;
@@ -69,7 +66,7 @@ public class Kinectris32 extends PApplet {
     float rightEdge, leftEdge, topEdge, bottomEdge, totalWidth, totalHeight;
 
     // Levels
-    int level = 2;
+    int level = 1;
     
     // create 3d model
     ObjImpScene scene;
@@ -88,12 +85,10 @@ public class Kinectris32 extends PApplet {
     
     // audio using Beads
     AudioContext ac;
-    float baseFrequency = 200.0f;
-    int sineCount = 10;
-    WavePlayer sineTone[];
-    Gain sineGain[];
-    Gain masterGain;
-    Glide sineFrequency[];
+    String sourceAudioFile;
+    SamplePlayer sp;
+    Gain g;
+    Glide gainValue;
     
     PImage tex;
     
@@ -174,11 +169,32 @@ public class Kinectris32 extends PApplet {
         //gl = pgl.gl;
         //initVBO();
         
-        // setup audio kinect
+        // setup audio
         ac = new AudioContext();
-        masterGain = new Gain(ac, 1, 0.5f);
-        ac.out.addInput(masterGain);
-
+        println(sketchPath(""));
+        sourceAudioFile = sketchPath("") + "src\\data\\ding.wav";
+        try {
+        	// initialize our SamplePlayer, loading the file
+        	// indicated by the sourceFile string
+        	sp = new SamplePlayer(ac, new Sample(sourceAudioFile));
+        }
+        catch(Exception e)
+        {
+        	// If there is an error, show an error message
+        	// at the bottom of the processing window.
+        	println("Exception while attempting to load sample!");
+        	e.printStackTrace(); // print description of the error
+        	exit(); // and exit the program
+        }
+        sp.setKillOnEnd(false);
+        // as usual, we create a gain that will control the volume
+        // of our sample player
+        gainValue = new Glide(ac, 0.0f, 20);
+        g = new Gain(ac, 1, gainValue);
+        g.addInput(sp); // connect the SamplePlayer to the Gain
+        ac.out.addInput(g); // connect the Gain to the AudioContext
+        ac.start(); // begin audio processing
+        
         // initialize kinectData
         kinectData = new KinectData();
                 
@@ -218,6 +234,15 @@ public class Kinectris32 extends PApplet {
 //            System.exit( 0 );
 //        }
     }
+    
+    public void mousePressed()
+    {
+    	// set the gain based on mouse position
+    	gainValue.setValue((float)mouseX/(float)width);
+    	// move the playback pointer to the first loop point (0.0)
+    	sp.setToLoopStart();
+    	sp.start(); // play the audio file
+    }   
     
     public void draw() {
         //kinect.update();
@@ -297,6 +322,8 @@ public class Kinectris32 extends PApplet {
 //        popMatrix();
 
     //terrain.draw();
+        
+     
     }
 
 
@@ -331,61 +358,77 @@ public class Kinectris32 extends PApplet {
     }
     
     class Gem{
-    	PApplet parent;
-    	float size;
-    	float xOff;
-    	float yOff;
-    	float zDepth;
-    	float zSpeed = 30;
-    	float x,y;
-    	float increment = 0.01f;
-    	int gemRounds = 0;
-    	float r = 0;
-    	
-    	Gem(PApplet p) {
-    		parent = p;
-    		x = random(-width/4,0);
-			initPosition();
+        PApplet parent;
+        float size;
+        float xOff;
+        float yOff;
+        float zDepth;
+        float zSpeed = 30;
+        float x,y;
+        float increment = 0.01f;
+        int gemRounds = 0;
+        float r = 0;
+        float pulseCounter = 0;
+        float pulseIncrement = 3;
+        boolean pulseDirectionOut = true;
+       
+        Gem(PApplet p) {
+            parent = p;
+            x = random(-width/4,0);
+            initPosition();
         }
-//    	private void updatePosition() {
-//    		xOff += increment;
-//			fill(255);
+//        private void updatePosition() {
+//            xOff += increment;
+//            fill(255);
 //            x = (parent.noise(xOff)*width * 0.75f) - width/8;
 //            y = (parent.noise(yOff)*height) - height/4;
-//     		zDepth += ((float)Math.random() * 20) + 20;
-//    	}
-//    	private void initPosition() {
+//             zDepth += ((float)Math.random() * 20) + 20;
+//        }
+//        private void initPosition() {
 //            size = parent.random(10,50);
 //            xOff = 0f + parent.random(width);
 //            yOff = 20f + parent.random(height);
 //            x = parent.noise(xOff)*width*1.5f;
 //            y = parent.noise(yOff)*width;
 //            zDepth = -2500;
-//   	}
-    	private void updatePosition() {
-     		zDepth += ((float)Math.random() * zSpeed) + 20;
-    	}
-    	private void initPosition() {
-            size = random(10,50);
+//       }
+        private void updatePosition() {
+             zDepth += ((float)Math.random() * zSpeed) + 20;
+        }
+        private void initPosition() {
+            pulseCounter = 0;
+            pulseIncrement = 8;
+            pulseDirectionOut = true;
+            size = 60; //random(10,50);
             r = random(1);
             if (r > 0.5) {
             x = random(-width/4,0); // or parent.random(width, width*1.25f);
             } else {
-                x = random(width, width*1.25f);            	
+                x = random(width, width*1.25f);               
             }
             y = random(-height/2, height*1.5f); // or parent.random(height, height*1.5f);
             zDepth = -3500;
             gemRounds++;
-   	}
+       }
         private void draw() {
-        	updatePosition();
-        	//directionalLight(51, 102, 126, -1, 0, 0);
-        	lights();
-        	pushMatrix();
-        	translate(x,y,zDepth);
-        	noStroke();
-        	fill(255, 0, 0);
+            pulseCounter += pulseIncrement;
+            if (pulseCounter > 30 && pulseDirectionOut) {
+                pulseDirectionOut = false;
+                pulseIncrement = -2;
+            } else if (pulseCounter <= 0) {
+                pulseDirectionOut = true;
+                pulseIncrement = 2;
+            }
+            updatePosition();
+            //directionalLight(51, 102, 126, -1, 0, 0);
+            lights();
+            pushMatrix();
+            translate(x,y,zDepth);
+            noStroke();
+            fill(255, 0, 0);
             parent.sphere(size);
+            fill(255, 255, 0, 80);
+            parent.sphere(size + pulseCounter);
             fill(0, 80);
             translate(0,height*1.5f-y-10, 0);
             rotateX(PI/2);
@@ -921,25 +964,25 @@ public class Kinectris32 extends PApplet {
         }
         
         private void generateWallCutout() {
-            bottomRightX = width/2; //parent.random(0, width);
-            topRightX = width/2; //parent.random(0, width);
-            topRightY = height/2; //parent.random(0, height/2);
-            topLeftX = 0; //parent.random(0, topRightX);
-            topLeftY = height/2; //parent.random(0, height/2);
-            bottomLeftX = 0; //parent.random(0, bottomRightX);
-            bottomRightU = bottomRightX / width;
-            topRightU = topRightX / width;
-            topRightV = .5f; //Math.abs((float)topRightY / totalHeight);
-            topLeftU = .1666f; //topLeftX / width;
-            topLeftV = .5f; //Math.abs((float)topLeftY / totalHeight);
-            bottomLeftU = .1666f; //bottomLeftX / totalWidth;
+            bottomRightX = parent.random(0, width);
+            topRightX = parent.random(0, width);
+            topRightY = parent.random(0, height/2);
+            topLeftX = parent.random(0, topRightX);
+            topLeftY = parent.random(0, height/2);
+            bottomLeftX = parent.random(0, bottomRightX);
+            bottomRightU = ((2 * bottomRightX) / (3 * width)) + .1666f;
+            topRightU = ((2 * topRightX) / (3 * width)) + .1666f;
+            topRightV = ((topRightY / 2) / height) + .25f;
+            topLeftU = ((2 * topLeftX) / (3 * width)) + .1666f;
+            topLeftV = ((topLeftY / 2) / height) + .25f;
+            bottomLeftU = ((2 * bottomLeftX) / (3 * width)) + .1666f;
 //            println(bottomRightX);
 //            println(topRightX);
 //            println(topRightY);
 //            println(topLeftX);
 //            println(topLeftY);
 //            println(bottomLeftX);
-            
+           
         }
         
         private void drawWallWithCutout() {
@@ -1152,11 +1195,13 @@ public class Kinectris32 extends PApplet {
         	fill(128);
         	pushMatrix();
         	translate(handLeftX, handLeftY, zDepth-15);
-        	ellipse(0,0, 60, 60);
+        	//ellipse(0,0, 60, 60);
+        	box(60);
             popMatrix();
         	pushMatrix();
         	translate(handRightX, handRightY, zDepth-15);
-        	ellipse(0,0, 60, 60);
+        	//ellipse(0,0, 60, 60);
+        	box(60);
             popMatrix();
             strokeWeight(1f);
             if (debug) {

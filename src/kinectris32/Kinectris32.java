@@ -58,6 +58,9 @@ public class Kinectris32 extends PApplet {
     Star [] stars = new Star[200];
     Gem gem = new Gem(this);
     
+    // game states
+    boolean hitTest = false;
+    
     // position of player on screen
     float yOffset = 0;
     float playerScaleFactor = 1.5f;
@@ -210,7 +213,7 @@ public class Kinectris32 extends PApplet {
         stage.drawMode(Shape3D.TEXTURE);
         stage.drawMode(Shape3D.WIRE, Box.FRONT);
         //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/sky.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/KAMEN-stup.jpg", Box.BOTTOM);
         stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
         stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         stage.setTexture("/src/data/sky.jpg", Box.TOP);
@@ -282,17 +285,26 @@ public class Kinectris32 extends PApplet {
         polygonPlayer.drawPolygon();
         
         // if the target has reached the player
-        if (polygonTarget.zDepth >= polygonPlayer.zDepth) {
+        if (polygonTarget.zDepth >= polygonPlayer.zDepth && !hitTest) {
             // check to see if hit target
             if (polygonPlayer.checkHit(polygonTarget)) {
                 polygonPlayer.score++;
-                level++;
                 hit = true;
             } else {
             	hit = false;
             }
+            hitTest = true;
+        }
+        
+        // keep drawing the wall past the player
+        // once it gets past far enough regenerate and reset hitTest
+        if (polygonTarget.zDepth > polygonPlayer.zDepth + 500) {
             targetComing = false;
-            polygonTarget.generatePolygon();
+            hitTest = false;
+            if (hit) {
+                level++;
+            }
+        	polygonTarget.generatePolygon();
         }
         
         // if the gem has reached the player
@@ -773,6 +785,7 @@ public class Kinectris32 extends PApplet {
         int numPoints;
         float[][] adjustedPolygonCoords;
         float zDepth, ogDepth;
+        float wallThickness;
         int polySize;
         float deltaX, deltaY, deltaZ;
         int score, lives;
@@ -785,6 +798,7 @@ public class Kinectris32 extends PApplet {
         PolygonTarget(PApplet p, int n, int size, float z, int c, boolean m, boolean k, boolean f) {
         	parent = p;
             zDepth = ogDepth = z;
+            wallThickness = 100;
             polySize = size;
             polygon = new float[0][0];
             adjustedPolygonCoords = new float[3][n];
@@ -964,12 +978,12 @@ public class Kinectris32 extends PApplet {
         }
         
         private void generateWallCutout() {
-            bottomRightX = parent.random(0, width);
-            topRightX = parent.random(0, width);
+            bottomRightX = parent.random(width/1.5f, width);
+            topRightX = parent.random(width/1.5f, width);
             topRightY = parent.random(0, height/2);
-            topLeftX = parent.random(0, topRightX);
+            topLeftX = parent.random(0, width/2.5f);
             topLeftY = parent.random(0, height/2);
-            bottomLeftX = parent.random(0, bottomRightX);
+            bottomLeftX = parent.random(0, width/2.5f);
             bottomRightU = ((2 * bottomRightX) / (3 * width)) + .1666f;
             topRightU = ((2 * topRightX) / (3 * width)) + .1666f;
             topRightV = ((topRightY / 2) / height) + .25f;
@@ -986,6 +1000,7 @@ public class Kinectris32 extends PApplet {
         }
         
         private void drawWallWithCutout() {
+        	// draw front part of the wall
         	beginShape();
             textureMode(NORMALIZED);
             texture(tex);
@@ -1000,6 +1015,68 @@ public class Kinectris32 extends PApplet {
             // end cutout
             vertex(leftEdge, bottomEdge, zDepth,0,1);
             endShape(CLOSE);
+            
+            // draw back part of the wall
+            float zThickDepth = zDepth - wallThickness;
+        	beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(leftEdge, topEdge, zThickDepth,0,0);
+            vertex(rightEdge, topEdge, zThickDepth,1,0);
+            vertex(rightEdge, bottomEdge, zThickDepth,1,1);
+            // begin cutout
+            vertex(bottomRightX, bottomEdge, zThickDepth,bottomRightU,1);
+            vertex(topRightX, topRightY, zThickDepth,topRightU,topRightV);
+            vertex(topLeftX, topLeftY, zThickDepth,topLeftU, topLeftV);
+            vertex(bottomLeftX, bottomEdge, zThickDepth,bottomLeftU,1);
+            // end cutout
+            vertex(leftEdge, bottomEdge, zThickDepth,0,1);
+            endShape(CLOSE);
+            
+            // draw cutout internal surfaces
+            //right
+            beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(bottomRightX, bottomEdge, zDepth,.1f,1);
+            vertex(bottomRightX, bottomEdge, zThickDepth,0,1);
+            vertex(topRightX, topRightY, zThickDepth,0,0);
+            vertex(topRightX, topRightY, zDepth,.1f,0);
+            endShape(CLOSE);
+            //top
+            beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(topRightX, topRightY, zDepth,.1f,1);
+            vertex(topRightX, topRightY, zThickDepth,0,1);
+            vertex(topLeftX, topLeftY, zThickDepth,0,0);
+            vertex(topLeftX, topLeftY, zDepth,.1f, 0);
+            endShape(CLOSE);
+            //left
+            beginShape();
+            textureMode(NORMALIZED);
+            texture(tex);
+            vertex(topLeftX, topLeftY, zDepth,.1f,0);
+            vertex(topLeftX, topLeftY, zThickDepth,0,0);
+            vertex(bottomLeftX, bottomEdge, zThickDepth,0,1);
+            vertex(bottomLeftX, bottomEdge, zDepth,.1f,1);
+            endShape(CLOSE);
+            //floor shadow
+            fill(0, 80);
+            /*pushMatrix();
+            translate(0,height*1.5f, zDepth);
+            rotateX(PI/2);
+            rect(bottomLeftX,bottomEdge, wallThickness, bottomRightX - bottomLeftX);
+            popMatrix();
+            */
+            beginShape();
+            vertex(bottomLeftX, bottomEdge-5, zDepth+20);
+            vertex(bottomLeftX, bottomEdge-5, zThickDepth-20);
+            vertex(bottomRightX, bottomEdge-5, zThickDepth-20);
+            vertex(bottomRightX, bottomEdge-5, zDepth+20);
+            endShape(CLOSE);
+            
+            
         }
         
         private void drawPolygon() {
@@ -1012,6 +1089,7 @@ public class Kinectris32 extends PApplet {
             }
             fill(clr, 0);
             stroke(clr, 50);
+            noStroke();
             drawWall();
             strokeWeight(2);
             noFill();

@@ -84,5 +84,11 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_06"/>
 	<classpathentry kind="lib" path="lib/base/objimport/objimport.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/toxiclibscore.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/verletphysics.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/datautils.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/simutils.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/toxiclibs_p5.jar"/>
+	<classpathentry kind="lib" path="lib/base/toxi/volumeutils.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -18,6 +18,10 @@ import shapes3d.animation.*;
 import shapes3d.*;
 import beads.*;
 import objimp.*;
+import toxi.geom.*;
+import toxi.physics.*;
+import toxi.physics.behaviors.*;
+import toxi.physics.constraints.*;
 
 //import geomerative.*;
 
@@ -50,7 +54,7 @@ public class Kinectris32 extends PApplet {
     int colP = color(100, 255, 100);
     PolygonTarget polygonTarget;
     PolygonPlayer polygonPlayer;
-    boolean targetComing = true;
+    boolean wallComing = true;
     PFont myFont;
     int scorePosX = 100;
     boolean paused, hit;
@@ -97,12 +101,18 @@ public class Kinectris32 extends PApplet {
     
     PeasyCam camera;
     
-    Box box, stage, boxTarget;
+    Box box, stage, stage2, boxTarget;
     
     int stageColor = color(186, 0, 203);
     int lineColor = color(235, 221, 0);
 //    RShape wall;
 //    RStyle wallStyle;
+    
+    
+    // Physics
+    VerletPhysics physics;
+    VisibleBoxConstraint worldFloor;
+    VerletParticle ball;
     
     public void setup() {
         size(1024, 768, OPENGL);
@@ -218,13 +228,36 @@ public class Kinectris32 extends PApplet {
         stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
+//        stage2 = new Box(this);
+//        stage2.fill(color(stageColor));
+//        stage2.stroke(color(lineColor));
+//        stage2.strokeWeight(2f);
+//        stage2.setSize(width*1.5f, height*2f, 4000);
+//        stage2.rotateToY(PI/4);
+//        stage2.moveTo(-width*9/8, height/2, -5900);
+//        stage2.drawMode(Shape3D.TEXTURE);
+//        stage2.drawMode(Shape3D.WIRE, Box.FRONT);
+//        //stage.drawMode(Shape3D.SOLID, Box.TOP);
+//        stage2.setTexture("/src/data/KAMEN-stup.jpg", Box.BOTTOM);
+//        stage2.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
+//        stage2.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
+//        stage2.setTexture("/src/data/sky.jpg", Box.TOP);
+
+        /*
         terrain = new Terrain(this, 60, terrainSize, horizon);
         terrain.usePerlinNoiseMap(0, 40, 0.15f, 0.15f);
-        terrain.setTexture("grass2.jpg", 4);
+        terrain.moveTo(width/2, -height/2, 0);
+        terrain.setTexture("/src/data/KAMEN.jpg", 4);
         terrain.tag = "Ground";
         terrain.tagNo = -1;
         terrain.drawMode(Shape3D.TEXTURE);
-        
+        float camSpeed = 10;
+        TerrainCam cam = new TerrainCam(this);
+        cam.adjustToTerrain(terrain, Terrain.WRAP, 8);
+        cam.camera();
+        cam.speed(camSpeed);
+        cam.forward.set(cam.lookDir());
+        */
         // setup obj import
 //        try
 //        {
@@ -236,20 +269,51 @@ public class Kinectris32 extends PApplet {
 //            println( e );
 //            System.exit( 0 );
 //        }
+        
+        // setup the physics and the world
+        physics = new VerletPhysics();
+        physics.setDrag(0.01f);
+        physics.addBehavior(new GravityBehavior(new Vec3D(0, 1, .1f)));
+        worldFloor = new VisibleBoxConstraint(new Vec3D(-width/4, height*1.5f, -3900), new Vec3D(width*5/4, height*1.6f, 100));
+        ball = new VerletParticle(new Vec3D(width/2, height/2, -200));
+        physics.addParticle(ball);
+        VerletPhysics.addConstraintToAll(worldFloor,physics.particles);
     }
+    
+    class VisibleBoxConstraint extends BoxConstraint {
+
+    	  public VisibleBoxConstraint(Vec3D min, Vec3D max) {
+    	    super(min,max);
+    	  }
+    	  
+    	  public void draw() {
+    	    Vec3D m=box.getMin();
+    	    Vec3D n=box.getMax();
+    	    beginShape(QUAD_STRIP);
+    	    stroke(255);
+    	    vertex(m.x,m.y,m.z); vertex(n.x,m.y,m.z);
+    	    vertex(m.x,n.y,m.z); vertex(n.x,n.y,m.z);
+    	    vertex(m.x,n.y,n.z); vertex(n.x,n.y,n.z);
+    	    vertex(m.x,m.y,n.z); vertex(n.x,m.y,n.z);
+    	    vertex(m.x,m.y,m.z); vertex(n.x,m.y,m.z);
+    	    endShape();
+    	  }
+    	}
     
     public void mousePressed()
     {
+    	/*
     	// set the gain based on mouse position
     	gainValue.setValue((float)mouseX/(float)width);
     	// move the playback pointer to the first loop point (0.0)
     	sp.setToLoopStart();
     	sp.start(); // play the audio file
+    	*/
     }   
     
     public void draw() {
         //kinect.update();
-
+    	physics.update();
         background(0);
         //directionalLight(51, 102, 126, -1, 0, 0);
         // draw the bg stars
@@ -273,15 +337,21 @@ public class Kinectris32 extends PApplet {
 
         // draw the game stage
         stage.draw();
-
+        worldFloor.draw();
+        pushMatrix();
+        translate(ball.x, ball.y, ball.z);
+        sphere(20);
+        popMatrix();
+        //terrain.draw();
         
         // draw the game pieces
-        if (targetComing) {
+        if (wallComing) {
 	        polygonTarget.updatePolygonPosition(polygonTarget.deltaX, polygonTarget.deltaY, polygonTarget.deltaZ);
 	        polygonTarget.drawPolygon();
         } else {
         	gem.draw();
         }
+
         polygonPlayer.drawPolygon();
         
         // if the target has reached the player
@@ -299,7 +369,7 @@ public class Kinectris32 extends PApplet {
         // keep drawing the wall past the player
         // once it gets past far enough regenerate and reset hitTest
         if (polygonTarget.zDepth > polygonPlayer.zDepth + 500) {
-            targetComing = false;
+        	wallComing = false;
             hitTest = false;
             if (hit) {
                 level++;
@@ -314,9 +384,9 @@ public class Kinectris32 extends PApplet {
         			dist(gem.x, gem.y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 120) {
         		polygonPlayer.gemScore++;
         	}
-        	if (!targetComing) gem.initPosition();
-        	if (gem.gemRounds % 1 == 0) {
-        		targetComing = true;
+        	if (!wallComing) gem.initPosition();
+        	if (gem.gemRounds % 4 == 0) {
+        		wallComing = true;
         	}
         }
         

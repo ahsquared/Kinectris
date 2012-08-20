@@ -60,7 +60,7 @@ public class Kinectris32 extends PApplet {
     boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
-    Gem gem = new Gem(this);
+    Gem gem;
     
     // game states
     boolean hitTest = false;
@@ -273,11 +273,11 @@ public class Kinectris32 extends PApplet {
         // setup the physics and the world
         physics = new VerletPhysics();
         physics.setDrag(0.01f);
-        physics.addBehavior(new GravityBehavior(new Vec3D(0, 1, .1f)));
+        physics.addBehavior(new GravityBehavior(new Vec3D(0, 1, 0)));
         worldFloor = new VisibleBoxConstraint(new Vec3D(-width/4, height*1.5f, -3900), new Vec3D(width*5/4, height*1.6f, 100));
-        ball = new VerletParticle(new Vec3D(width/2, height/2, -200));
-        physics.addParticle(ball);
-        VerletPhysics.addConstraintToAll(worldFloor,physics.particles);
+        
+        // init Gem
+        gem = new Gem(this);
     }
     
     class VisibleBoxConstraint extends BoxConstraint {
@@ -338,10 +338,6 @@ public class Kinectris32 extends PApplet {
         // draw the game stage
         stage.draw();
         worldFloor.draw();
-        pushMatrix();
-        translate(ball.x, ball.y, ball.z);
-        sphere(20);
-        popMatrix();
         //terrain.draw();
         
         // draw the game pieces
@@ -453,10 +449,14 @@ public class Kinectris32 extends PApplet {
         float pulseCounter = 0;
         float pulseIncrement = 3;
         boolean pulseDirectionOut = true;
-       
+        VerletParticle gemBall;
+        
         Gem(PApplet p) {
             parent = p;
             x = random(-width/4,0);
+            gemBall = new VerletParticle(new Vec3D(width/2, height/2, -200));
+            physics.addParticle(gemBall);
+            VerletPhysics.addConstraintToAll(worldFloor,physics.particles);
             initPosition();
         }
 //        private void updatePosition() {
@@ -476,6 +476,8 @@ public class Kinectris32 extends PApplet {
 //       }
         private void updatePosition() {
              zDepth += ((float)Math.random() * zSpeed) + 20;
+             x = gemBall.x;
+             y = gemBall.y;
         }
         private void initPosition() {
             pulseCounter = 0;
@@ -490,6 +492,7 @@ public class Kinectris32 extends PApplet {
             }
             y = random(-height/2, height*1.5f); // or parent.random(height, height*1.5f);
             zDepth = -3500;
+            //gemBall.set(new Vec3D(width/2, height/2, -200));
             gemRounds++;
        }
         private void draw() {

@@ -125,7 +125,7 @@ public class Kinectris32 extends PApplet {
         totalHeight = bottomEdge - topEdge;
         float fov = PI/2.5f;
         float cameraZ = (height/1.875f) / tan(PI*60.0f/360.0f);
-        perspective(fov, width/height, cameraZ/10.0f, cameraZ*11.5f);
+        perspective(fov, width/height, cameraZ/10.0f, cameraZ*16f);
         //perspective(radians(45), width/height, 10f,150000f);
         frameRate(30);
         myFont = createFont("Arial", 32);
@@ -231,7 +231,7 @@ public class Kinectris32 extends PApplet {
 
         world = new Ellipsoid(this, 16 ,24);
         world.setTexture("/src/data/clouds.jpg");
-        world.setRadius(width*6, height*4, 2000);
+        world.setRadius(width*6, height*4, 1500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
         world.drawMode(Shape3D.TEXTURE);

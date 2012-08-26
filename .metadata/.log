@@ -1,0 +1,10 @@
+!SESSION 2012-08-19 10:41:44.708 -----------------------------------------------
+eclipse.buildId=M20110909-1335
+java.version=1.7.0_05
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_AU
+Framework arguments:  -product org.eclipse.epp.package.java.product
+Command-line arguments:  -data C:\Users\Andre\Documents\Kinectris\Kinectris -os win32 -ws win32 -arch x86_64 -product org.eclipse.epp.package.java.product
+
+!ENTRY com.android.ide.eclipse.ddms 4 0 2012-08-19 10:41:51.102
+!MESSAGE DDMS files not found: C:\Program Files (x86)\eclipse indigo\platform-tools\adb.exe C:\Program Files (x86)\eclipse indigo\tools\hprof-conv.exe C:\Program Files (x86)\eclipse indigo\tools\traceview.bat 

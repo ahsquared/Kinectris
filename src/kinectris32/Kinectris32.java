@@ -931,6 +931,7 @@ public class Kinectris32 extends PApplet {
 
         private float[][] simpleWall() {
         	//this.zDepth = z;
+        	wallSize = resetWallSize();
         	float[][] polygonCoords = new float[3][4];
         	float z = zDepth;
         	//leftEdge, -height/2, boxTarget.getWidth(), boxTarget.getHeight()
@@ -1053,6 +1054,19 @@ public class Kinectris32 extends PApplet {
         private void drawWall() {
             switch (level) {
         	case 1:
+                strokeWeight(2f);
+            	int n = 4;
+                if (polygon.length != 0) {
+                	n = polygon[0].length;
+                }
+                beginShape();
+                for (int i = 0; i < n; i++) {
+                	vertex(polygon[0][i], polygon[1][i], polygon[2][i]);
+                }
+                endShape(CLOSE);
+                strokeWeight(1);
+                fill(0);
+        		
                 float newWidth = width/wallSize;
                 boxTarget.setSize(newWidth, height*2f, 50);
                 boxTarget.moveTo(leftEdge + newWidth/2, height/2, zDepth-10);
@@ -1072,6 +1086,7 @@ public class Kinectris32 extends PApplet {
         private void generateWall() {
         	//wallSize = resetWallSize();
     		polygon = simpleWall();
+            offsetAdjustedPolygonCoords();
         }
         
         private void generateWallCutout() {
@@ -1087,17 +1102,30 @@ public class Kinectris32 extends PApplet {
             topLeftU = ((2 * topLeftX) / (3 * width)) + .1666f;
             topLeftV = ((topLeftY / 2) / height) + .25f;
             bottomLeftU = ((2 * bottomLeftX) / (3 * width)) + .1666f;
-//            println(bottomRightX);
-//            println(topRightX);
-//            println(topRightY);
-//            println(topLeftX);
-//            println(topLeftY);
-//            println(bottomLeftX);
+            
+        	float[][] polygonCoords = new float[3][4];
+        	float z = zDepth;
+        	//leftEdge, -height/2, boxTarget.getWidth(), boxTarget.getHeight()
+            polygon[0][0] = bottomRightX;
+            polygon[1][0] = bottomEdge;
+            polygon[2][0] = ogDepth;
+            polygon[0][1] = topRightX;
+            polygon[1][1] = topRightY;
+            polygon[2][1] = ogDepth;
+            polygon[0][2] = topLeftX;
+            polygon[1][2] = topLeftY;
+            polygon[2][2] = ogDepth;
+            polygon[0][3] = bottomLeftX;
+            polygon[1][3] = bottomEdge;
+            polygon[2][3] = ogDepth;
+            
+            offsetAdjustedPolygonCoords();
            
         }
         
         private void drawWallWithCutout() {
         	// draw front part of the wall
+        	noStroke();
         	beginShape();
             textureMode(NORMALIZED);
             texture(tex);
@@ -1173,42 +1201,32 @@ public class Kinectris32 extends PApplet {
             vertex(bottomRightX, bottomEdge-5, zDepth+20);
             endShape(CLOSE);
             
+            // hit Polygon - don't need to draw it
+            strokeWeight(2f);
+            stroke(255);
+        	int n = 4;
+            if (polygon.length != 0) {
+            	n = polygon[0].length;
+            }
+            beginShape();
+            for (int i = 0; i < n; i++) {
+            	vertex(polygon[0][i], polygon[1][i], polygon[2][i]);
+            }
+            endShape(CLOSE);
+            strokeWeight(1);
+            fill(0);
+
             
         }
         
         private void draw() {
             // polygon is array of array of coords
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
-        	int n = 4;
-            if (polygon.length != 0) {
-            	n = polygon[0].length;
-            	offsetAdjustedPolygonCoords();
-            }
             fill(255, 100);
             stroke(255);
             //noStroke();
             drawWall();
-            strokeWeight(2f);
-            //noFill();
-            beginShape();
-            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]); //, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-//            for (int i=0; i < n; i++) {
-//                vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]); //, adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
-//                //curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-//                text(i, polygon[0][i]/2, polygon[1][i]/2, -500);//i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
-//            }
-            for (int i = 0; i < n; i++) {
-            	vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-            }
-//            vertex(adjustedPolygonCoords[0][1], adjustedPolygonCoords[1][1], adjustedPolygonCoords[2][1]);
-//            vertex(adjustedPolygonCoords[0][2], adjustedPolygonCoords[1][2], adjustedPolygonCoords[2][2]);
-//            vertex(adjustedPolygonCoords[0][3], adjustedPolygonCoords[1][3], adjustedPolygonCoords[2][3]);//, adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
-            //curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]);
-            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
-            endShape(CLOSE);
-            strokeWeight(1);
-            fill(0);
+            
 
         }
 

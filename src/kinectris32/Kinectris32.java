@@ -22,6 +22,7 @@ import toxi.geom.*;
 import toxi.physics.*;
 import toxi.physics.behaviors.*;
 import toxi.physics.constraints.*;
+import themidibus.*;
 
 //import geomerative.*;
 
@@ -102,7 +103,7 @@ public class Kinectris32 extends PApplet {
     PeasyCam camera;
     
     Box box, stage, stage2, boxTarget;
-    Ellipsoid world;
+    Ellipsoid world, worldOuter;
     
     int stageColor = color(186, 0, 203);
     int lineColor = color(235, 221, 0);
@@ -114,6 +115,9 @@ public class Kinectris32 extends PApplet {
     VerletPhysics physics;
     VisibleBoxConstraint worldFloor;
     VerletParticle ball;
+    
+    // Midi
+    MidiBus myBus;
     
     public void setup() {
         size(1280, 720, OPENGL);
@@ -230,14 +234,22 @@ public class Kinectris32 extends PApplet {
         //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         world = new Ellipsoid(this, 16 ,24);
-        world.setTexture("/src/data/clouds.jpg");
-        world.setRadius(width*6, height*4, 1500);
+        world.setTexture("/src/data/clouds.png");
+        world.setRadius(3000, 3000, 1500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
         world.drawMode(Shape3D.TEXTURE);
         //int color = color(255, 0, 255);
         //world.fill(color);
-        world.stroke(color(160,160,0));
+
+        worldOuter = new Ellipsoid(this, 16 ,24);
+        worldOuter.setTexture("/src/data/clouds.jpg");
+        worldOuter.setRadius(4000, 4000, 2000);
+        worldOuter.moveTo(width/2, height/2, -1000);
+        worldOuter.rotateToY(-PI/2.3f);
+        worldOuter.drawMode(Shape3D.TEXTURE);
+        //int color = color(255, 0, 255);
+        //world.fill(color);
         
         
 //        stage2 = new Box(this);
@@ -351,6 +363,7 @@ public class Kinectris32 extends PApplet {
         stage.draw();
         //worldFloor.draw();
         world.draw();
+       //worldOuter.draw();
         //terrain.draw();
         
         // draw the game pieces

@@ -23,6 +23,7 @@ import toxi.physics.*;
 import toxi.physics.behaviors.*;
 import toxi.physics.constraints.*;
 import themidibus.*;
+import rwmidi.*;
 
 //import geomerative.*;
 
@@ -61,7 +62,7 @@ public class Kinectris32 extends PApplet {
     boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
-    Gem gem;
+    Gem[] gems;
     
     // game states
     boolean hitTest = false;
@@ -117,7 +118,10 @@ public class Kinectris32 extends PApplet {
     VerletParticle ball;
     
     // Midi
-    MidiBus myBus;
+    MidiBus midiBus;
+    MidiInput input;
+    MidiOutput output;
+    MidiTimer midiTimer;
     
     public void setup() {
         size(1280, 720, OPENGL);
@@ -140,7 +144,7 @@ public class Kinectris32 extends PApplet {
         camera = new PeasyCam(this, width/2, height/2, 200, 1150);
         
         tex = loadImage("/src/data/KAMEN.jpg");
-        
+
 //        RG.init( this );
 //        wall = RG.loadShape("/src/data/Toucan.svg");
 //        wallStyle = new RStyle();
@@ -216,7 +220,7 @@ public class Kinectris32 extends PApplet {
         // initialize kinectData
         kinectData = new KinectData();
                 
-        polygonTarget = new PolygonTarget(this, 4, 650, -3500, colT, false, true, false);
+        polygonTarget = new PolygonTarget(this, 4, 650, -3000, colT, false, true, false);
         polygonPlayer = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
 
         stage = new Box(this);
@@ -228,14 +232,14 @@ public class Kinectris32 extends PApplet {
         stage.drawMode(Shape3D.TEXTURE);
         //stage.drawMode(Shape3D.WIRE, Box.FRONT);
         //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/grass2.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/KAMEN.jpg", Box.BOTTOM);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         world = new Ellipsoid(this, 16 ,24);
-        world.setTexture("/src/data/clouds.png");
-        world.setRadius(3000, 3000, 1500);
+        world.setTexture("/src/data/clouds.jpg");
+        world.setRadius(4000, 4000, 2500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
         world.drawMode(Shape3D.TEXTURE);
@@ -301,7 +305,22 @@ public class Kinectris32 extends PApplet {
         worldFloor = new VisibleBoxConstraint(new Vec3D(-width/4, height*1.5f, -3900), new Vec3D(width*5/4, height*1.6f, 100));
         
         // init Gem
-        gem = new Gem(this, true);
+        gems = new Gem[4];
+        for (int i = 0; i < gems.length; i++) {
+        	gems[i] = new Gem(this, true, i * 500);
+        }
+        
+        
+        // MIDI
+//        MidiBus.list();
+//    	midiBus = new MidiBus(this, -1, "Java Sound Synthesizer");
+    	
+    	println(RWMidi.getOutputDeviceNames());
+    	input = RWMidi.getInputDevices()[0].createInput(this);
+    	output = RWMidi.getOutputDevices()[3].createOutput();
+
+    	// timer to end notes after a given time outside the normal thread
+    	midiTimer = new MidiTimer(0, 3);
     }
     
     class VisibleBoxConstraint extends BoxConstraint {
@@ -360,18 +379,32 @@ public class Kinectris32 extends PApplet {
         fill(255,0,0, 0);
 
         // draw the game stage
-        stage.draw();
-        //worldFloor.draw();
+        //stage.draw();
+        worldFloor.draw();
         world.draw();
-       //worldOuter.draw();
+        //worldOuter.draw();
         //terrain.draw();
         
         // draw the game pieces
         if (wallComing) {
 	        polygonTarget.updatePolygonPosition(polygonTarget.deltaX, polygonTarget.deltaY, polygonTarget.deltaZ);
 	        polygonTarget.draw();
-        } else {
-        	gem.draw();
+        } else {       	
+        	boolean gemsDone = true;
+            for (int i = 0; i < gems.length; i++) {
+            	gems[i].draw();
+                // if the gem has reached the player
+    	        if (gems[i].zDepth >= polygonPlayer.zDepth) {
+    		        // check to see if the player has caught a gem
+		        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 120 ||
+		        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 120) {
+		        		polygonPlayer.gemScore++;
+		        	}
+		        } else {
+		        	gemsDone = false;
+		        }
+            }
+            if (gemsDone) wallComing = true;
         }
 
         polygonPlayer.drawPolygon();
@@ -386,6 +419,7 @@ public class Kinectris32 extends PApplet {
             	hit = false;
             }
             hitTest = true;
+            sendMidi(0, 64, 100);
         }
         
         // keep drawing the wall past the player
@@ -397,20 +431,12 @@ public class Kinectris32 extends PApplet {
                 level++;
             }
         	polygonTarget.generatePolygon();
+        	for (int i = 0; i < gems.length; i++) {
+        		gems[i].initPosition();
+        	}
+
         }
         
-        // if the gem has reached the player
-        if (gem.zDepth >= polygonPlayer.zDepth) {
-        // check to see if the player has caught a gem
-        	if (dist(gem.x, gem.y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 120 ||
-        			dist(gem.x, gem.y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 120) {
-        		polygonPlayer.gemScore++;
-        	}
-        	if (!wallComing) gem.initPosition();
-        	if (gem.gemRounds % 4 == 0) {
-        		wallComing = true;
-        	}
-        }
         
         renderHud();
         //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
@@ -466,22 +492,27 @@ public class Kinectris32 extends PApplet {
         float size;
         float xOff;
         float yOff;
-        float zDepth;
+        float zDepth, zOffset;
         float zSpeed = 30;
-        float x,y;
+        float x,y,z;
         float increment = 0.01f;
         int gemRounds = 0;
+        boolean complete = false;
         float r = 0;
         float pulseCounter = 0;
         float pulseIncrement = 3;
         boolean pulseDirectionOut = true;
         boolean physicsOn;
+        boolean hasBounced = false;
         VerletParticle gemBall;
+        MidiTimer gemTimer;
         
-        Gem(PApplet p, boolean pOn) {
+        Gem(PApplet p, boolean pOn, float zO) {
             parent = p;
             physicsOn = pOn;
+            zOffset = zO;
             initPosition();
+            gemTimer = new MidiTimer(0, 3);
         }
 //        private void updatePosition() {
 //            xOff += increment;
@@ -499,10 +530,27 @@ public class Kinectris32 extends PApplet {
 //            zDepth = -2500;
 //       }
         private void updatePosition() {
-             zDepth += ((float)Math.random() * zSpeed) + 20;
              if (physicsOn) {
 	             x = gemBall.x;
 	             y = gemBall.y;
+	             z = gemBall.z;
+             }
+             zDepth = z;
+             //int v = (int)gemBall.getVelocity().magnitude();
+             //println(y);
+             if (y > 1040 && !hasBounced) {
+            	 //int pitch = (int)Math.max(Math.abs(zDepth / 40), 36);
+            	 int pitch = (int)map(Math.abs((x / 20)), 0, 100, 48, 80);
+                 int v = (int)Math.min(gemBall.getVelocity().magnitude() * 2, 100);
+                 //println("v: " + v);
+            	 sendMidi(0, pitch, v);
+            	 //println("x: " + x + ", y: " + y);
+            	 //println("turned note " + pitch + " on");
+            	 hasBounced = true;
+             }
+             if (y < 1000 && hasBounced) {
+            	 //println("bounce reset");
+            	 hasBounced = false;
              }
         }
         private void initPosition() {
@@ -516,17 +564,23 @@ public class Kinectris32 extends PApplet {
             } else {
                 x = random(width, width*1.25f);               
             }
-            y = random(-height/2, height*1.5f); // or parent.random(height, height*1.5f);
+            y = random(-height, height/4); // or parent.random(height, height*1.5f);
             if (physicsOn) {
             	physics.removeParticle(gemBall);
-	            gemBall = new VerletParticle(new Vec3D(x, y, -200));
+	            gemBall = new VerletParticle(new Vec3D(x, y, zOffset - 5500));
+	            gemBall.addForce(new Vec3D(0, 0, 100));
 	            physics.addParticle(gemBall);
 	            VerletPhysics.addConstraintToAll(worldFloor,physics.particles);
             }
-            zDepth = -3500;
+            zDepth = zOffset - 5500;
             //gemBall.set(new Vec3D(width/2, height/2, -200));
             gemRounds++;
        }
+        private void sendMidi(int channel, int pitch, int velocity) {
+        	output.sendNoteOn(channel, pitch, velocity); // Send a Midi noteOn
+        	gemTimer.setNote(channel, pitch, 250);
+        }
+
         private void draw() {
             pulseCounter += pulseIncrement;
             if (pulseCounter > 30 && pulseDirectionOut) {
@@ -540,7 +594,7 @@ public class Kinectris32 extends PApplet {
             //directionalLight(51, 102, 126, -1, 0, 0);
             lights();
             pushMatrix();
-            translate(x,y,zDepth);
+            translate(x,y,z);
             noStroke();
             fill(255, 0, 0);
             parent.sphere(size);
@@ -559,6 +613,12 @@ public class Kinectris32 extends PApplet {
         }
     }
 
+    private void sendMidi(int channel, int pitch, int velocity) {
+    	output.sendNoteOn(channel, pitch, velocity); // Send a Midi noteOn
+    	midiTimer.setNote(channel, pitch, 250);
+    }
+
+    
     // Joints are numbered:
     // going around clockwise from 
     // right foot to hip, wrist, shoulder, head, then other side
@@ -869,6 +929,7 @@ public class Kinectris32 extends PApplet {
   	
     }
 
+    
     class KinectJoint {
     	public float x, y, z;
     	String name;
@@ -934,7 +995,7 @@ public class Kinectris32 extends PApplet {
         	zDepth = ogDepth;
             deltaX = ((float)Math.random() * 6) - 3 ;
             deltaY = ((float)Math.random() * 6) - 3;
-            deltaZ = ((float)Math.random() * 20) + 20;
+            deltaZ = 30; //((float)Math.random() * 20) + 20;
         }
         
         private float resetWallSize() {

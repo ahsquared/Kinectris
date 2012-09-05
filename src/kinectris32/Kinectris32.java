@@ -300,7 +300,7 @@ public class Kinectris32 extends PApplet {
         // setup the physics and the world
         physics = new VerletPhysics();
         //physics.setDrag(0.01f);
-        physics.addBehavior(new GravityBehavior(new Vec3D(0, 1, 0)));
+        physics.addBehavior(new GravityBehavior(new Vec3D(0, 0.2f, 0)));
         //worldFloor = new VisibleBoxConstraint(new Vec3D(-width*4, height*1.5f, -3900), new Vec3D(width*4, height*1.55f, 1500));
 
         // init Gem
@@ -555,17 +555,17 @@ public class Kinectris32 extends PApplet {
              zDepth = z;
              
              //int v = (int)gemBall.getVelocity().magnitude();
-             println(y);
+             //println(y);
              if (y >= 1040 && !hasBounced) {
             	 //int pitch = (int)Math.max(Math.abs(zDepth / 40), 36);
             	 int pitch = (int)map(Math.abs((x / 20)), 0, 100, 48, 80);
                  int v = (int)Math.min(gemBall.getVelocity().magnitude() * 2, 100);
-                 //println("v: " + v);
+                 println("v: " + v);
             	 sendMidi(0, pitch, v);
             	 //println("x: " + x + ", y: " + y);
             	 //println("turned note " + pitch + " on");
             	 hasBounced = true;
-            	 gemBall.addForce(new Vec3D(0,-100,0));
+            	 gemBall.addForce(new Vec3D(0,-65,0));
              }
              if (y < 1000 && hasBounced) {
             	 //println("bounce reset");
@@ -576,7 +576,7 @@ public class Kinectris32 extends PApplet {
             pulseCounter = 0;
             pulseIncrement = 8;
             pulseDirectionOut = true;
-            size = 10; //random(10,50);
+            size = 50; //random(10,50);
             r = random(1);
             if (r > 0.5) {
             x = random(-width/4,0); // or parent.random(width, width*1.25f);
@@ -587,7 +587,7 @@ public class Kinectris32 extends PApplet {
             if (physicsOn) {
             	physics.removeParticle(gemBall);
 	            gemBall = new VerletParticle(new Vec3D(x, y, zOffset - 5500));
-	            gemBall.addForce(new Vec3D(0, 0, 50));
+	            gemBall.addForce(new Vec3D(0, 40, 50));
 	            physics.addParticle(gemBall);
 	            //VerletPhysics.addConstraintToAll(floor, physics.particles);
             }

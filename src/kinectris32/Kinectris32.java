@@ -408,6 +408,7 @@ public class Kinectris32 extends PApplet {
         }
 
         polygonPlayer.drawPolygon();
+        //polygonPlayer.drawSpheres();
         
         // if the target has reached the player
         if (polygonTarget.zDepth >= polygonPlayer.zDepth && !hitTest) {
@@ -459,7 +460,7 @@ public class Kinectris32 extends PApplet {
 
     private void renderHud() {
     	fill(255);
-    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore, scorePosX, 100);
+    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + frameRate, scorePosX, 100);
     }
     
     ShapeMover shapeMover;
@@ -560,7 +561,7 @@ public class Kinectris32 extends PApplet {
             	 //int pitch = (int)Math.max(Math.abs(zDepth / 40), 36);
             	 int pitch = (int)map(Math.abs((x / 20)), 0, 100, 48, 80);
                  int v = (int)Math.min(gemBall.getVelocity().magnitude() * 2, 100);
-                 println("v: " + v);
+                 //println("v: " + v);
             	 sendMidi(0, pitch, v);
             	 //println("x: " + x + ", y: " + y);
             	 //println("turned note " + pitch + " on");
@@ -1435,7 +1436,7 @@ public class Kinectris32 extends PApplet {
 //            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
 //            popMatrix();
             boxPlayer.moveTo(width/2, height/2, zDepth-20);
-            boxPlayer.draw();
+            //boxPlayer.draw();
 
             if (filled) {
                 fill(clr);
@@ -1448,19 +1449,62 @@ public class Kinectris32 extends PApplet {
             footLeftY = adjustedPolygonCoords[1][17];
             floorOffset = Math.min(height*1.5f - footRightY, height*1.5f - footLeftY);
             pushMatrix();
-            translate(0, floorOffset, 0);
+            translate(0, floorOffset, adjustedPolygonCoords[2][0]+1);
             beginShape();
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);
             for (int i=0; i < n; i++) {
-                //vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i], adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i]);
                 curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]+1);
-                //text(i,adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] );
             }
-            //vertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0], adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0]);
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);
-            //text(n-1,adjustedPolygonCoords[0][n-1], adjustedPolygonCoords[1][n-1] );
             endShape(CLOSE);
             popMatrix();
+            /*
+            handLeftX = adjustedPolygonCoords[0][11];
+            handLeftY = adjustedPolygonCoords[1][11] + floorOffset;
+            handRightX = adjustedPolygonCoords[0][6];
+            handRightY = adjustedPolygonCoords[1][6] + floorOffset;
+            fill(0,0);
+        	strokeWeight(2f);
+        	stroke(255,255,0,120);
+        	pushMatrix();
+        	translate(handLeftX, handLeftY, zDepth-15);
+        	//ellipse(0,0, 60, 60);
+        	sphere(100);
+            popMatrix();
+        	pushMatrix();
+        	translate(handRightX, handRightY, zDepth-15);
+        	//ellipse(0,0, 60, 60);
+        	sphere(100);
+            popMatrix();
+            strokeWeight(1f);
+			*/
+        }
+        private void drawSpheres() {
+            // polygon is array of array of coords
+            // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
+            int n = polygon[0].length;
+            offsetAdjustedPolygonCoords();
+            boxPlayer.moveTo(width/2, height/2, zDepth-20);
+            //boxPlayer.draw();
+
+            if (filled) {
+                fill(clr);
+            } else {
+                noFill();
+            }
+            stroke(clr);
+            strokeWeight(2f);
+            footRightY = adjustedPolygonCoords[1][0];
+            footLeftY = adjustedPolygonCoords[1][17];
+            floorOffset = Math.min(height*1.5f - footRightY, height*1.5f - footLeftY);
+            noStroke();
+            fill(255, 255, 255, 60);
+            for (int i=0; i < n; i++) {
+                pushMatrix();
+                translate(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i] + floorOffset, adjustedPolygonCoords[2][0]+1);
+            	sphere(60);
+                popMatrix();
+            }
             handLeftX = adjustedPolygonCoords[0][11];
             handLeftY = adjustedPolygonCoords[1][11] + floorOffset;
             handRightX = adjustedPolygonCoords[0][6];

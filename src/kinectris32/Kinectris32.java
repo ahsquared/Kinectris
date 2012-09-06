@@ -142,7 +142,7 @@ public class Kinectris32 extends PApplet {
         textMode(SCREEN);
         camera = new PeasyCam(this, width/2, height/2, 200, 1150);
         
-        tex = loadImage("/src/data/KAMEN.jpg");
+        tex = loadImage("/src/data/abstract-01.jpg");
 
 //        RG.init( this );
 //        wall = RG.loadShape("/src/data/Toucan.svg");
@@ -231,17 +231,18 @@ public class Kinectris32 extends PApplet {
         stage.drawMode(Shape3D.TEXTURE);
         //stage.drawMode(Shape3D.WIRE, Box.FRONT);
         //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/KAMEN.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/abstract-01.jpg", Box.BOTTOM);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         world = new Ellipsoid(this, 16 ,24);
-        world.setTexture("/src/data/clouds.jpg");
+        world.setTexture("/src/data/sky-02.jpg");
         world.setRadius(4000, 4000, 2500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
         world.drawMode(Shape3D.TEXTURE);
+        //world.fill(color(248, 129, 2));
         //int color = color(255, 0, 255);
         //world.fill(color);
 
@@ -1005,9 +1006,9 @@ public class Kinectris32 extends PApplet {
             boxTarget.setSize(width * 1.5f, height*2f, 10);
             boxTarget.moveTo(width/2, height/2, 0);
             boxTarget.drawMode(Shape3D.TEXTURE);
-            boxTarget.setTexture("/src/data/KAMEN.jpg", Box.FRONT);
-            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.LEFT);
-            boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.RIGHT);
+            boxTarget.setTexture("/src/data/abstract-01.jpg");
+            //boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.LEFT);
+            //boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.RIGHT);
             generatePolygon();
         }
 
@@ -1296,8 +1297,8 @@ public class Kinectris32 extends PApplet {
             endShape(CLOSE);
             
             // hit Polygon - don't need to draw it
-            strokeWeight(2f);
-            stroke(255);
+            noStroke();
+            noFill();
         	int n = 4;
             if (polygon.length != 0) {
             	n = polygon[0].length;
@@ -1444,7 +1445,7 @@ public class Kinectris32 extends PApplet {
                 noFill();
             }
             stroke(clr);
-            strokeWeight(4f);
+            strokeWeight(8f);
             footRightY = adjustedPolygonCoords[1][0];
             footLeftY = adjustedPolygonCoords[1][17];
             floorOffset = Math.min(height*1.5f - footRightY, height*1.5f - footLeftY);

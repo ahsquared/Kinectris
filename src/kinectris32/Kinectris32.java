@@ -237,7 +237,7 @@ public class Kinectris32 extends PApplet {
         //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         world = new Ellipsoid(this, 16 ,24);
-        world.setTexture("/src/data/sky-02.jpg");
+        world.setTexture("/src/data/clouds.jpg");
         world.setRadius(4000, 4000, 2500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
@@ -512,6 +512,8 @@ public class Kinectris32 extends PApplet {
         float zDepth, zOffset;
         float zSpeed = 30;
         float x,y,z;
+        int frameCount;
+        Vec3D[] trailPoints = new Vec3D[120];
         float increment = 0.01f;
         int gemRounds = 0;
         boolean complete = false;
@@ -528,8 +530,12 @@ public class Kinectris32 extends PApplet {
             parent = p;
             physicsOn = pOn;
             zOffset = zO;
+            for (int i = 0; i < trailPoints.length; i++) {
+            	trailPoints[i] = new Vec3D(0,0,0);
+            }
             initPosition();
             gemTimer = new MidiTimer(0, 3);
+
         }
 //        private void updatePosition() {
 //            xOff += increment;
@@ -547,6 +553,7 @@ public class Kinectris32 extends PApplet {
 //            zDepth = -2500;
 //       }
         private void updatePosition() {
+        	 frameCount += 1;
              if (physicsOn) {
 	             x = gemBall.x;
 	             y = gemBall.y;
@@ -573,19 +580,28 @@ public class Kinectris32 extends PApplet {
             	 //println("bounce reset");
             	 hasBounced = false;
              }
+             //trailPoints[frameCount] = new Vec3D(0,0,0);
+             trailPoints[frameCount].x = x;
+             trailPoints[frameCount].y = y;
+             trailPoints[frameCount].z = z;
         }
         private void initPosition() {
             pulseCounter = 0;
             pulseIncrement = 8;
             pulseDirectionOut = true;
+            frameCount = 0;
+            //trailPoints = new Vec3D[120];
             size = 50; //random(10,50);
             r = random(1);
             if (r > 0.5) {
-            x = random(-width/4,0); // or parent.random(width, width*1.25f);
+            	x = random(-width/4,0); // or parent.random(width, width*1.25f);
             } else {
                 x = random(width, width*1.25f);               
             }
+            //trailPoints[frameCount] = new Vec3D(0,0,0);
+            trailPoints[frameCount].x = x;
             y = random(-height, height/4); // or parent.random(height, height*1.5f);
+            trailPoints[frameCount].y = y;
             if (physicsOn) {
             	physics.removeParticle(gemBall);
 	            gemBall = new VerletParticle(new Vec3D(x, y, zOffset - 5500));
@@ -593,7 +609,7 @@ public class Kinectris32 extends PApplet {
 	            physics.addParticle(gemBall);
 	            //VerletPhysics.addConstraintToAll(floor, physics.particles);
             }
-            zDepth = zOffset - 5500;
+            trailPoints[frameCount].z = zDepth = zOffset - 5500;
             //gemBall.set(new Vec3D(width/2, height/2, -200));
             gemRounds++;
        }
@@ -626,6 +642,11 @@ public class Kinectris32 extends PApplet {
             rotateX(PI/2);
             ellipse(0,0,size*4,size*4);
             popMatrix();
+            stroke(255, 255, 0);
+            strokeWeight(3f);
+            for (int i = 0; i < frameCount - 1 ; i++) {
+            	line(trailPoints[i].x, trailPoints[i].y, trailPoints[i].z, trailPoints[i+1].x, trailPoints[i+1].y, trailPoints[i+1].z);
+            }
 //            pushMatrix();
 //            translate(0,0,zDepth);
 //            rotateX(PI/2);
@@ -1437,7 +1458,7 @@ public class Kinectris32 extends PApplet {
 //            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
 //            popMatrix();
             boxPlayer.moveTo(width/2, height/2, zDepth-20);
-            //boxPlayer.draw();
+            boxPlayer.draw();
 
             if (filled) {
                 fill(clr);

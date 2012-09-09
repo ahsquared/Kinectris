@@ -55,6 +55,7 @@ public class Kinectris32 extends PApplet {
     PolygonTarget polygonTarget;
     PolygonPlayer polygonPlayer;
     boolean wallComing = true;
+    boolean wallWaiting = false;
     PFont myFont;
     int scorePosX = 100;
     boolean paused, hit;
@@ -105,6 +106,7 @@ public class Kinectris32 extends PApplet {
     Ellipsoid world, worldOuter;
     
     int stageColor = color(186, 0, 203);
+    //int stageColor = color(0, 0, 0);
     int lineColor = color(235, 221, 0);
 //    RShape wall;
 //    RStyle wallStyle;
@@ -121,6 +123,9 @@ public class Kinectris32 extends PApplet {
     MidiInput input;
     MidiOutput output;
     MidiTimer midiTimer;
+    
+    PImage Bg;
+    PImage catchMe;
     
     public void setup() {
         size(1280, 720, OPENGL);
@@ -142,7 +147,7 @@ public class Kinectris32 extends PApplet {
         textMode(SCREEN);
         camera = new PeasyCam(this, width/2, height/2, 200, 1150);
         
-        tex = loadImage("/src/data/abstract-01.jpg");
+        tex = loadImage("/src/data/fractals/fractal-03.jpg");
 
 //        RG.init( this );
 //        wall = RG.loadShape("/src/data/Toucan.svg");
@@ -226,18 +231,22 @@ public class Kinectris32 extends PApplet {
         stage.fill(color(stageColor));
         stage.stroke(color(lineColor));
         stage.strokeWeight(2f);
-        stage.setSize(width*5f, height*2f, 4000);
+        stage.setSize(width*1.75f, height*2f, 5000);
         stage.moveTo(width/2, height/2, -1500);
-        stage.drawMode(Shape3D.TEXTURE);
+        //stage.drawMode(Shape3D.WIRE);
+        //stage.drawMode(Shape3D.SOLID, Box.BOTTOM);
         //stage.drawMode(Shape3D.WIRE, Box.FRONT);
-        //stage.drawMode(Shape3D.SOLID, Box.TOP);
-        stage.setTexture("/src/data/abstract-01.jpg", Box.BOTTOM);
+        stage.drawMode(Shape3D.TEXTURE);
+        stage.setTexture("/src/data/fractals/fractal-03.jpg", Box.BOTTOM);
+        stage.setTexture("/src/data/dry-grass-wall.png", Box.RIGHT);
+        stage.setTexture("/src/data/dry-grass-wall.png", Box.LEFT);
+        stage.setTexture("/src/data/dry-grass-wall.png", Box.BACK);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
         //stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
         //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
-        world = new Ellipsoid(this, 16 ,24);
-        world.setTexture("/src/data/clouds.jpg");
+        world = new Ellipsoid(this, 32 ,48);
+        world.setTexture("/src/data/clouds-yellow.jpg");
         world.setRadius(4000, 4000, 2500);
         world.moveTo(width/2, height/2, -1000);
         world.rotateToY(-PI/2);
@@ -252,6 +261,10 @@ public class Kinectris32 extends PApplet {
         worldOuter.moveTo(width/2, height/2, -1000);
         worldOuter.rotateToY(-PI/2.3f);
         worldOuter.drawMode(Shape3D.TEXTURE);
+
+        Bg = loadImage("/src/data/clouds-yellow.jpg");
+        //plus5 = loadShape("/src/data/plus5.svg");
+        catchMe = loadImage("/src/data/catch.png");
         //int color = color(255, 0, 255);
         //world.fill(color);
         
@@ -354,11 +367,11 @@ public class Kinectris32 extends PApplet {
     	sp.start(); // play the audio file
     	*/
     }   
-    
     public void draw() {
         //kinect.update();
     	physics.update();
-        background(0);
+        background(Bg);
+        
         //directionalLight(51, 102, 126, -1, 0, 0);
         // draw the bg stars
 //        pushMatrix();
@@ -378,19 +391,21 @@ public class Kinectris32 extends PApplet {
 //        popMatrix();
         
         fill(255,0,0, 0);
+        lights();
 
         // draw the game stage
-        stage.draw();
         //worldFloor.draw();
-        world.draw();
+        //world.draw();
+        stage.draw();
+        
         //worldOuter.draw();
         //terrain.draw();
         
         // draw the game pieces
-        if (wallComing) {
+        if (wallComing && !wallWaiting) {
 	        polygonTarget.updatePolygonPosition(polygonTarget.deltaX, polygonTarget.deltaY, polygonTarget.deltaZ);
 	        polygonTarget.draw();
-        } else {       	
+        } else if (!wallWaiting) {       	
         	boolean gemsDone = true;
             for (int i = 0; i < gems.length; i++) {
             	gems[i].draw();
@@ -405,7 +420,24 @@ public class Kinectris32 extends PApplet {
 		        	gemsDone = false;
 		        }
             }
-            if (gemsDone) wallComing = true;
+            if (gemsDone) {
+            	wallComing = true;
+            	wallWaiting = true;
+            }
+        } else if (wallWaiting) {
+        	boolean gemsWaiting = true;
+        	for (int i = 0; i < gems.length; i++) {
+            	gems[i].draw();
+                // if the gem has reached the player
+    	        if (gems[i].zDepth >= polygonPlayer.zDepth + 1200) {
+    		        
+		        } else {
+		        	gemsWaiting = false;
+		        }
+            }        	
+            if (gemsWaiting) {
+            	wallWaiting = false;
+            }
         }
 
         polygonPlayer.drawPolygon();
@@ -414,19 +446,29 @@ public class Kinectris32 extends PApplet {
         // if the target has reached the player
         if (polygonTarget.zDepth >= polygonPlayer.zDepth && !hitTest) {
             // check to see if hit target
-            if (polygonPlayer.checkHit(polygonTarget)) {
-                polygonPlayer.score++;
-                hit = true;
-            } else {
-            	hit = false;
-            }
+        	if (level == 1) {
+	            if (polygonPlayer.checkMiss(polygonTarget)) {
+	                polygonPlayer.score++;
+	                hit = true;
+	            } else {
+	            	hit = false;
+	            }
+        	} else {
+	            if (polygonPlayer.checkHit(polygonTarget)) {
+	                polygonPlayer.score++;
+	                hit = true;
+	            } else {
+	            	hit = false;
+	            }
+        		
+        	}
             hitTest = true;
             sendMidi(0, 64, 100);
         }
         
         // keep drawing the wall past the player
         // once it gets past far enough regenerate and reset hitTest
-        if (polygonTarget.zDepth > polygonPlayer.zDepth + 500) {
+        if (polygonTarget.zDepth > polygonPlayer.zDepth + 1200) {
         	wallComing = false;
             hitTest = false;
             if (hit) {
@@ -513,7 +555,9 @@ public class Kinectris32 extends PApplet {
         float zSpeed = 30;
         float x,y,z;
         int frameCount;
-        Vec3D[] trailPoints = new Vec3D[120];
+        int trailLength = 30;
+        int trailStart = 0;
+        Vec3D[] trailPoints = new Vec3D[200];
         float increment = 0.01f;
         int gemRounds = 0;
         boolean complete = false;
@@ -530,6 +574,7 @@ public class Kinectris32 extends PApplet {
             parent = p;
             physicsOn = pOn;
             zOffset = zO;
+            size = 70; //random(10,50);
             for (int i = 0; i < trailPoints.length; i++) {
             	trailPoints[i] = new Vec3D(0,0,0);
             }
@@ -591,7 +636,6 @@ public class Kinectris32 extends PApplet {
             pulseDirectionOut = true;
             frameCount = 0;
             //trailPoints = new Vec3D[120];
-            size = 50; //random(10,50);
             r = random(1);
             if (r > 0.5) {
             	x = random(-width/4,0); // or parent.random(width, width*1.25f);
@@ -629,23 +673,40 @@ public class Kinectris32 extends PApplet {
             }
             updatePosition();
             //directionalLight(51, 102, 126, -1, 0, 0);
-            lights();
             pushMatrix();
             translate(x,y,zDepth);
             noStroke();
-            fill(255, 0, 0);
-            parent.sphere(size);
-            fill(255, 255, 0, 80);
-            parent.sphere(size + pulseCounter);
+            fill(186, 0, 203);
+            sphere(size);
+            translate(-90,-150,0);
+            //stroke(color(stageColor));
+            image(catchMe, 0, 0);
+            //text("+5", 0,20,0);
+            //fill(255, 255, 0, 80);
+            //sphere(size + pulseCounter);
             fill(0, 80);
             translate(0,height*1.5f-y-10, 0);
             rotateX(PI/2);
             ellipse(0,0,size*4,size*4);
             popMatrix();
-            stroke(255, 255, 0);
-            strokeWeight(3f);
-            for (int i = 0; i < frameCount - 1 ; i++) {
-            	line(trailPoints[i].x, trailPoints[i].y, trailPoints[i].z, trailPoints[i+1].x, trailPoints[i+1].y, trailPoints[i+1].z);
+            stroke(186, 0, 203, 70);
+            strokeWeight(2f);
+            noFill();
+            if (frameCount > 30) {
+            	trailStart = frameCount - 30;
+            } else {
+            	trailStart = 0;
+            }
+            int counter = 0;
+            for (int i = trailStart; i < frameCount - 1 ; i = i + 1) {
+            	counter++;
+            	//line(trailPoints[i].x, trailPoints[i].y, trailPoints[i].z, trailPoints[i+1].x, trailPoints[i+1].y, trailPoints[i+1].z);
+            	pushMatrix();
+            	translate(trailPoints[i].x, trailPoints[i].y, trailPoints[i].z);
+            	float size = counter * 4;
+            	stroke(186, 0, 203, size-20);
+            	ellipse(0, 0, size, size);
+            	popMatrix();
             }
 //            pushMatrix();
 //            translate(0,0,zDepth);
@@ -1026,8 +1087,9 @@ public class Kinectris32 extends PApplet {
             boxTarget.strokeWeight(2f);
             boxTarget.setSize(width * 1.5f, height*2f, 10);
             boxTarget.moveTo(width/2, height/2, 0);
+            //boxTarget.drawMode(Shape3D.SOLID);
             boxTarget.drawMode(Shape3D.TEXTURE);
-            boxTarget.setTexture("/src/data/abstract-01.jpg");
+            boxTarget.setTexture("/src/data/fractals/fractal-03.jpg");
             //boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.LEFT);
             //boxTarget.setTexture("/src/data/KAMEN-stup.jpg", Box.RIGHT);
             generatePolygon();
@@ -1041,7 +1103,7 @@ public class Kinectris32 extends PApplet {
         }
         
         private float resetWallSize() {
-        	float size = parent.random(.5f,5);
+        	float size = parent.random(.5f,1.5f);
         	return size;
         }
 
@@ -1138,6 +1200,7 @@ public class Kinectris32 extends PApplet {
 		            }          	
 	            }
         	}
+        	offsetAdjustedPolygonCoords();
         }
 
         private void offsetAdjustedPolygonCoords() {
@@ -1145,7 +1208,7 @@ public class Kinectris32 extends PApplet {
 	            float mX = 0;
 	            float mY = 0;
 	            float offsetX = width/2;
-	            float offsetY = height/2;
+	            float offsetY = height;
 	            float offsetZ = 0;
 //	            if (move) {
 //	                mX = mouseX * 1.5f;
@@ -1318,8 +1381,8 @@ public class Kinectris32 extends PApplet {
             endShape(CLOSE);
             
             // hit Polygon - don't need to draw it
-            noStroke();
-            noFill();
+            //noStroke();
+            //noFill();
         	int n = 4;
             if (polygon.length != 0) {
             	n = polygon[0].length;
@@ -1458,18 +1521,19 @@ public class Kinectris32 extends PApplet {
 //            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
 //            popMatrix();
             boxPlayer.moveTo(width/2, height/2, zDepth-20);
-            boxPlayer.draw();
+            //boxPlayer.draw();
 
             if (filled) {
                 fill(clr);
             } else {
                 noFill();
             }
-            stroke(clr);
+            stroke(color(lineColor));
             strokeWeight(8f);
             footRightY = adjustedPolygonCoords[1][0];
             footLeftY = adjustedPolygonCoords[1][17];
             floorOffset = Math.min(height*1.5f - footRightY, height*1.5f - footLeftY);
+            yOffset = floorOffset;
             pushMatrix();
             translate(0, floorOffset, adjustedPolygonCoords[2][0]+1);
             beginShape();
@@ -1561,10 +1625,25 @@ public class Kinectris32 extends PApplet {
                     hit = true;
                 } else {
                     hit = false;
-                    break;
+                    return hit;
                 }
             }
             return hit;
+        }
+        
+        private boolean checkMiss(PolygonTarget polygonTarget) {
+            int numPlayerPoints = this.numPoints;
+            boolean miss = false;
+            for (int p = 0; p < numPlayerPoints; p++) {
+                float[] point = {this.getPolygon()[0][p], this.getPolygon()[1][p]};
+                if (pointInPolygon(polygonTarget, point)) {
+                    miss = false;
+                    return miss;
+                } else {
+                    miss = true;
+                }
+            }
+            return miss;
         }
 
         private void updateJoint(int joint, float x, float y, float z) {

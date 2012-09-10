@@ -5,6 +5,7 @@ import java.util.HashMap;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
+import controlP5.*;
 import peasy.PeasyCam;
 import javax.media.opengl.*;
 import processing.opengl.*;
@@ -46,8 +47,10 @@ public class Kinectris32 extends PApplet {
     public static boolean debug = false;
     
 
-    // Kinect
-    //SimpleOpenNI kinect;
+    // GUI
+    ControlP5 cp5;
+    ControlWindow controlWindow;
+
     boolean autoCalib = true;
 
     int colT = color(255, 100, 100);
@@ -61,7 +64,7 @@ public class Kinectris32 extends PApplet {
     int hudPosY = 45;
     boolean paused, hit;
     int pauseCounter = 0;
-    Star [] stars = new Star[200];
+
     Gem[] gems;
     
     // game states
@@ -163,11 +166,14 @@ public class Kinectris32 extends PApplet {
 //        oscP5.plug(this, "hipLeft", "kinect/skeleton/0/hip_left");
 //        oscP5.plug(this, "hipCenter", "kinect/skeleton/0/hip_center");
 //        oscP5.plug(this, "head", "kinect/skeleton/0/head");
-        int len = stars.length;
-        for (int i=0; i < len; i++) {
-            stars[i] = new Star();
-        }
 
+        // GUI
+        cp5 = new ControlP5(this);
+
+        controlWindow = cp5.addControlWindow("controlP5window", 100, 100, 400, 200).hideCoordinates().setBackground(color(40));
+
+        cp5.addSlider("sliderValue").setRange(0, 255).setPosition(40, 40).setSize(200, 29).setWindow(controlWindow);
+        
         // initialize kinectData
         kinectData = new KinectData();
                 
@@ -225,7 +231,7 @@ public class Kinectris32 extends PApplet {
         //worldFloor = new VisibleBoxConstraint(new Vec3D(-width*4, height*1.5f, -3900), new Vec3D(width*4, height*1.55f, 1500));
 
         // init Gem
-        gems = new Gem[4];
+        gems = new Gem[2];
         for (int i = 0; i < gems.length; i++) {
         	gems[i] = new Gem(this, true, i * 500f);
         }
@@ -408,31 +414,6 @@ public class Kinectris32 extends PApplet {
     	cloud.draw();
     }
     
-    private void drawStars() {
-        fill(255);
-        stroke(128);
-        int len = stars.length;
-        for (int i=0; i < len; i++) {
-            Star star = stars[i];
-            star.draw();
-        }
-
-    }
-
-    class Star{
-        float size;
-        float x;
-        float y;
-
-        Star() {
-            size = (float)Math.random() * 10;
-            x = ((float)Math.random() - 0.5f) * width * 4;
-            y = ((float)Math.random() - 0.5f) * height * 4;
-        }
-        private void draw() {
-            ellipse(x, y, size, size);
-        }
-    }
     
     class Gem{
         PApplet parent;
@@ -1394,7 +1375,7 @@ public class Kinectris32 extends PApplet {
             }
             for (int i=0; i < numPoints; i++) {
                 adjustedPolygonCoords[0][i] = polygon[0][i] + offsetX + mX;
-                adjustedPolygonCoords[1][i] = polygon[1][i] + offsetY + mY + yOffset;
+                adjustedPolygonCoords[1][i] = polygon[1][i] + offsetY + mY; // + yOffset;
                 adjustedPolygonCoords[2][i] = polygon[2][i] + offsetZ;
             }
         }

@@ -57,7 +57,8 @@ public class Kinectris32 extends PApplet {
     boolean wallComing = true;
     boolean wallWaiting = false;
     PFont myFont;
-    int scorePosX = 100;
+    int hudPosX = 75;
+    int hudPosY = 45;
     boolean paused, hit;
     int pauseCounter = 0;
     Star [] stars = new Star[200];
@@ -149,31 +150,6 @@ public class Kinectris32 extends PApplet {
         
         tex = loadImage("/src/data/fractals/fractal-03.jpg");
 
-//        RG.init( this );
-//        wall = RG.loadShape("/src/data/Toucan.svg");
-//        wallStyle = new RStyle();
-//        wallStyle.texture = tex;
-//        wall.setStyle(wallStyle);
-        
-        /* setup Kinect */
-        /*try {
-        	kinect = new SimpleOpenNI(this);
-        	// disable mirror
-            kinect.setMirror(true);
-            // enable depthMap generation
-            if(kinect.enableDepth() == false)
-            {
-                println("Can't open the depthMap, maybe the camera is not connected!");
-                exit();
-                return;
-            }
-            // enable skeleton generation for all joints
-            kinect.enableUser(SimpleOpenNI.SKEL_PROFILE_ALL);
-        } catch (Exception e) {
-        	JOptionPane.showMessageDialog(frame, "SimpleOpenNI failed.");
-        }*/
-        
-
         // start oscP5 listening for incoming messages at port 3000
         oscP5 = new OscP5(this, 3001);
         myRemoteLocation = new NetAddress("127.0.0.1", 3001);
@@ -191,36 +167,7 @@ public class Kinectris32 extends PApplet {
         for (int i=0; i < len; i++) {
             stars[i] = new Star();
         }
-        //pgl = (PGraphicsOpenGL) g;
-        //gl = pgl.gl;
-        //initVBO();
-        
-        // setup audio
-        ac = new AudioContext();
-        println(sketchPath(""));
-        sourceAudioFile = sketchPath("") + "src\\data\\ding.wav";
-        try {
-        	// initialize our SamplePlayer, loading the file
-        	// indicated by the sourceFile string
-        	sp = new SamplePlayer(ac, new Sample(sourceAudioFile));
-        }
-        catch(Exception e)
-        {
-        	// If there is an error, show an error message
-        	// at the bottom of the processing window.
-        	println("Exception while attempting to load sample!");
-        	e.printStackTrace(); // print description of the error
-        	exit(); // and exit the program
-        }
-        sp.setKillOnEnd(false);
-        // as usual, we create a gain that will control the volume
-        // of our sample player
-        gainValue = new Glide(ac, 0.0f, 20);
-        g = new Gain(ac, 1, gainValue);
-        g.addInput(sp); // connect the SamplePlayer to the Gain
-        ac.out.addInput(g); // connect the Gain to the AudioContext
-        ac.start(); // begin audio processing
-        
+
         // initialize kinectData
         kinectData = new KinectData();
                 
@@ -233,17 +180,11 @@ public class Kinectris32 extends PApplet {
         stage.strokeWeight(2f);
         stage.setSize(width*1.75f, height*2f, 5000);
         stage.moveTo(width/2, height/2, -1500);
-        //stage.drawMode(Shape3D.WIRE);
-        //stage.drawMode(Shape3D.SOLID, Box.BOTTOM);
-        //stage.drawMode(Shape3D.WIRE, Box.FRONT);
         stage.drawMode(Shape3D.TEXTURE);
         stage.setTexture("/src/data/fractals/fractal-03.jpg", Box.BOTTOM);
         stage.setTexture("/src/data/dry-grass-wall.png", Box.RIGHT);
         stage.setTexture("/src/data/dry-grass-wall.png", Box.LEFT);
         stage.setTexture("/src/data/dry-grass-wall.png", Box.BACK);
-        //stage.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
-        //stage.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
-        //stage.setTexture("/src/data/sky.jpg", Box.TOP);
 
         world = new Ellipsoid(this, 32 ,48);
         world.setTexture("/src/data/clouds-yellow.jpg");
@@ -263,42 +204,8 @@ public class Kinectris32 extends PApplet {
         worldOuter.drawMode(Shape3D.TEXTURE);
 
         Bg = loadImage("/src/data/clouds-yellow.jpg");
-        //plus5 = loadShape("/src/data/plus5.svg");
         catchMe = loadImage("/src/data/catch.png");
-        //int color = color(255, 0, 255);
-        //world.fill(color);
         
-        
-//        stage2 = new Box(this);
-//        stage2.fill(color(stageColor));
-//        stage2.stroke(color(lineColor));
-//        stage2.strokeWeight(2f);
-//        stage2.setSize(width*1.5f, height*2f, 4000);
-//        stage2.rotateToY(PI/4);
-//        stage2.moveTo(-width*9/8, height/2, -5900);
-//        stage2.drawMode(Shape3D.TEXTURE);
-//        stage2.drawMode(Shape3D.WIRE, Box.FRONT);
-//        //stage.drawMode(Shape3D.SOLID, Box.TOP);
-//        stage2.setTexture("/src/data/KAMEN-stup.jpg", Box.BOTTOM);
-//        stage2.setTexture("/src/data/KAMEN.jpg", Box.RIGHT);
-//        stage2.setTexture("/src/data/KAMEN.jpg", Box.LEFT);
-//        stage2.setTexture("/src/data/sky.jpg", Box.TOP);
-
-        /*
-        terrain = new Terrain(this, 60, terrainSize, horizon);
-        terrain.usePerlinNoiseMap(0, 40, 0.15f, 0.15f);
-        terrain.moveTo(width/2, -height/2, 0);
-        terrain.setTexture("/src/data/KAMEN.jpg", 4);
-        terrain.tag = "Ground";
-        terrain.tagNo = -1;
-        terrain.drawMode(Shape3D.TEXTURE);
-        float camSpeed = 10;
-        TerrainCam cam = new TerrainCam(this);
-        cam.adjustToTerrain(terrain, Terrain.WRAP, 8);
-        cam.camera();
-        cam.speed(camSpeed);
-        cam.forward.set(cam.lookDir());
-        */
         // setup obj import
 //        try
 //        {
@@ -373,23 +280,7 @@ public class Kinectris32 extends PApplet {
         background(Bg);
         
         //directionalLight(51, 102, 126, -1, 0, 0);
-        // draw the bg stars
-//        pushMatrix();
-//        translate(0,0,-1600);
-//        drawStars();
-//        popMatrix();
-        
-        
-//        pushMatrix();
-//        translate(width/2, height/2, 0);
-//        fill(255,0,0,0);
-//        //stroke(0);
-//        int clr = color(255,0,0);
-//        //drawBox(width * .75f, height * 1f, 1500, -1400, clr, false);
-//        
-//        //box(width * .75f, height * .75f, 1000);
-//        popMatrix();
-        
+       
         fill(255,0,0, 0);
         lights();
 
@@ -486,31 +377,21 @@ public class Kinectris32 extends PApplet {
         }
 
         polygonPlayer.drawPolygon();
-        //polygonPlayer.drawSpheres();
-                      
         
         renderHud();
-        //text("Frame Rate: " + frameRate, scorePosX, 20, 0);
-        //text("Score: " + polygonPlayer.score, scorePosX, 100, 0);
-
-        // box.draw();
-        
-//        RG.shape(wall);
-//        lights();
-//        pushMatrix();
-//        translate(width/2, height/2,0);
-//        scene.draw();
-//        popMatrix();
-
-    //terrain.draw();
-        
      
     }
 
 
     private void renderHud() {
+    	pushStyle();
+    	fill(0, 50);
+    	stroke(lineColor);
+    	strokeWeight(2f);
+    	rect(-width/4 - 10, -height + 120, 1000, 150);
     	fill(255);
-    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + frameRate, scorePosX, 100);
+    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + frameRate, hudPosX, hudPosY);
+    	popStyle();
     }
     
     ShapeMover shapeMover;
@@ -1559,7 +1440,7 @@ public class Kinectris32 extends PApplet {
             handLeftY = adjustedPolygonCoords[1][11] + floorOffset;
             handRightX = adjustedPolygonCoords[0][6];
             handRightY = adjustedPolygonCoords[1][6] + floorOffset;
-            
+            /*
             fill(0,0);
         	strokeWeight(2f);
         	stroke(255,255,0,120);
@@ -1574,7 +1455,7 @@ public class Kinectris32 extends PApplet {
         	sphere(100);
             popMatrix();
             strokeWeight(1f);
-			
+			*/
         }
 
         private boolean checkHit(PolygonTarget polygonTarget) {

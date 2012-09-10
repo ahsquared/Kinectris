@@ -170,7 +170,7 @@ public class Kinectris32 extends PApplet {
         // GUI
         cp5 = new ControlP5(this);
 
-        controlWindow = cp5.addControlWindow("controlP5window", 100, 100, 400, 200).hideCoordinates().setBackground(color(40));
+        controlWindow = cp5.addControlWindow("controlP5window", 0, 0, 400, 200).hideCoordinates().setBackground(color(40));
 
         cp5.addSlider("sliderValue").setRange(0, 255).setPosition(40, 40).setSize(200, 29).setWindow(controlWindow);
         
@@ -353,6 +353,8 @@ public class Kinectris32 extends PApplet {
 			        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 120 ||
 			        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 120) {
 			        		polygonPlayer.gemScore++;
+			        		polygonPlayer.caught();
+			        		gems[i].caught();
 			        	}
 			        	gems[i].done = true;
     	        	}
@@ -444,7 +446,6 @@ public class Kinectris32 extends PApplet {
             parent = p;
             physicsOn = pOn;
             zOffset = zO;
-            size = 70; //random(10,50);
             for (int i = 0; i < trailPoints.length; i++) {
             	trailPoints[i] = new Vec3D(0,0,0);
             }
@@ -502,7 +503,8 @@ public class Kinectris32 extends PApplet {
         }
         private void initPosition() {
         	done = false;
-            pulseCounter = 0;
+        	size = 70;
+        	pulseCounter = 0;
             pulseIncrement = 8;
             pulseDirectionOut = true;
             frameCount = 0;
@@ -585,6 +587,10 @@ public class Kinectris32 extends PApplet {
 //            rotateX(PI/2);
 //            ellipse(0, height*3, 30,30);
 //            popMatrix();
+        }
+        
+        private void caught() {
+        	size = 5;
         }
     }
 
@@ -1296,6 +1302,7 @@ public class Kinectris32 extends PApplet {
         Box boxPlayer;
         float handLeftX, handLeftY, handRightX, handRightY;
         float footLeftY, footRightY, floorOffset;
+        int colorCounter, playerColor;
         
         PolygonPlayer(int n, int size, float yO, float z, int c, boolean m, boolean k, boolean f) {
             zDepth = ogDepth = z;
@@ -1315,6 +1322,8 @@ public class Kinectris32 extends PApplet {
             footRightY = 0;
             floorOffset = 0;
             lives = 5;
+            colorCounter = 0;
+            playerColor = lineColor;
             boxPlayer = new Box(kinectris32.Kinectris32.this);
             boxPlayer.fill(color(stageColor));
             boxPlayer.stroke(color(lineColor));
@@ -1380,19 +1389,18 @@ public class Kinectris32 extends PApplet {
             }
         }
 
+        private void caught() {
+        	colorCounter = 30;
+        	playerColor = stageColor;
+        }
+        
         private void drawPolygon() {
             // polygon is array of array of coords
             // [[x1, x2, x3, x4...], [y1, y2, y3, y4]]
             int n = polygon[0].length;
             offsetAdjustedPolygonCoords();
-//            fill(clr, 20);
-//            stroke(clr, 50);
-//            pushMatrix();
-//            translate(width/2, height/2, 0);
-//            //box(width * .75f, height * .75f, 2);
-//            //drawBox(width * .75f, height * 1f, 1f, zDepth, clr, false);
-//            popMatrix();
-            boxPlayer.moveTo(width/2, height/2, zDepth-20);
+
+            //boxPlayer.moveTo(width/2, height/2, zDepth-20);
             //boxPlayer.draw();
 
             if (filled) {
@@ -1400,7 +1408,14 @@ public class Kinectris32 extends PApplet {
             } else {
                 noFill();
             }
-            stroke(color(lineColor));
+            if (colorCounter > 0) {
+            	colorCounter--;
+            	  
+            	 playerColor = lerpColor( lineColor, stageColor, colorCounter / 30f );
+            } else {
+            	playerColor = lineColor;
+            }
+            stroke(color(playerColor));
             strokeWeight(8f);
             footRightY = adjustedPolygonCoords[1][0];
             footLeftY = adjustedPolygonCoords[1][17];

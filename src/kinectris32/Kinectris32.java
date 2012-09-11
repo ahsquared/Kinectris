@@ -523,7 +523,11 @@ public class Kinectris32 extends PApplet {
             if (physicsOn) {
             	physics.removeParticle(gemBall);
 	            gemBall = new VerletParticle(new Vec3D(x, y, zDepth));
-	            gemBall.addForce(new Vec3D(0, 40, 50));
+	            if (level < 4) {
+	            	gemBall.addForce(new Vec3D(0, 40, 50));
+	            } else {
+	            	gemBall.addForce(new Vec3D(0, 40, 80));	            	
+	            }
 	            physics.addParticle(gemBall);
 	            //VerletPhysics.addConstraintToAll(floor, physics.particles);
             }
@@ -977,7 +981,11 @@ public class Kinectris32 extends PApplet {
         	zDepth = ogDepth;
             deltaX = ((float)Math.random() * 6) - 3 ;
             deltaY = ((float)Math.random() * 6) - 3;
-            deltaZ = 30; //((float)Math.random() * 20) + 20;
+            if (level < 4) {
+            	deltaZ = 30;
+            } else {
+            	deltaZ = 50;
+            }
         }
         
         private float resetWallSize() {
@@ -1046,6 +1054,9 @@ public class Kinectris32 extends PApplet {
         		generateWallCutout();
         		break;
         	case 3:
+        		generateWallCutout2();
+        		break;
+        	case 4:
         		generateWallCutout2();
         		break;
         	default:
@@ -1293,19 +1304,17 @@ public class Kinectris32 extends PApplet {
             vertex(bottomRightX, bottomEdge-5, zDepth+20);
             endShape(CLOSE);
             
-            // hit Polygon - don't need to draw it
-            //noStroke();
-            //noFill();
-            if (polygon.length != 0) {
-	            fill(0, 80);
-	            beginShape();
-	            for (int i = 0; i < numPoints; i++) {
-	            	vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
-	            }
-	            endShape(CLOSE); 
-            }
-            strokeWeight(1);
-            fill(0);
+            // Hit Polygon - no need to draw it
+//            if (polygon.length != 0) {
+//	            fill(0, 80);
+//	            beginShape();
+//	            for (int i = 0; i < numPoints; i++) {
+//	            	vertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]);
+//	            }
+//	            endShape(CLOSE); 
+//            }
+//            strokeWeight(1);
+//            fill(0);
 			
             
         }
@@ -1393,14 +1402,15 @@ public class Kinectris32 extends PApplet {
             vertex(bottomRightX, bottomEdge-5, zDepth+20);
             endShape(CLOSE);
             
-            if (polygon.length != 0) {
-	            fill(0, 80);
-	            beginShape();
-	            for (int i = 0; i < numPoints; i++) {
-	            	vertex(polygon[0][i], polygon[1][i], polygon[2][i]);
-	            }
-	            endShape(CLOSE); 
-            }
+         // Hit Polygon - no need to draw it
+//            if (polygon.length != 0) {
+//	            fill(0, 80);
+//	            beginShape();
+//	            for (int i = 0; i < numPoints; i++) {
+//	            	vertex(polygon[0][i], polygon[1][i], polygon[2][i]);
+//	            }
+//	            endShape(CLOSE); 
+//            }
             
         }
          

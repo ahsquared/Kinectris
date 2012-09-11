@@ -84,7 +84,8 @@ public class Kinectris32 extends PApplet {
     
     // Kinect Joints
     KinectData kinectData;
-  
+    boolean noSkeleton = true;
+    
     // oscP5
     OscP5 oscP5;
     NetAddress myRemoteLocation;
@@ -152,6 +153,7 @@ public class Kinectris32 extends PApplet {
         oscP5 = new OscP5(this, 3001);
         myRemoteLocation = new NetAddress("127.0.0.1", 3001);
         oscP5.plug(this, "allJoints", "/skeleton0");
+        oscP5.plug(this, "noSkeleton", "/noskeleton");
 //        oscP5.plug(this, "wristLeft", "/skeleton0/WristLeft");
 //        oscP5.plug(this, "shoulderRight", "kinect/skeleton/0/shoulder_right");
 //        oscP5.plug(this, "shoulderLeft", "kinect/skeleton/0/shoulder_left");
@@ -401,7 +403,9 @@ public class Kinectris32 extends PApplet {
             }
         }
 
-        polygonPlayer.drawPolygon();
+        if (!noSkeleton) {
+        	polygonPlayer.drawPolygon();
+        }
         
         renderHud();
      
@@ -620,7 +624,9 @@ public class Kinectris32 extends PApplet {
     	midiTimer.setNote(channel, pitch, 250);
     }
 
-    
+    public void noSkeleton(String data) {
+    	noSkeleton = true;
+    }
     // Joints are numbered:
     // going around clockwise from 
     // right foot to hip, wrist, shoulder, head, then other side
@@ -647,6 +653,7 @@ public class Kinectris32 extends PApplet {
 	// 20   footRight
     
     public void allJoints(String data) {
+    	noSkeleton = false;
         fill(255);
         String[] joints = data.split(",");
         for(int i=0; i < joints.length; i++) {

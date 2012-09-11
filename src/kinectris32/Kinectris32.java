@@ -192,22 +192,22 @@ public class Kinectris32 extends PApplet {
         stage.setTexture("/src/data/dry-grass-wall.png", Box.LEFT);
         stage.setTexture("/src/data/dry-grass-wall.png", Box.BACK);
 
-        world = new Ellipsoid(this, 32 ,48);
-        world.setTexture("/src/data/clouds-yellow.jpg");
-        world.setRadius(4000, 4000, 2500);
-        world.moveTo(width/2, height/2, -1000);
-        world.rotateToY(-PI/2);
-        world.drawMode(Shape3D.TEXTURE);
-        //world.fill(color(248, 129, 2));
-        //int color = color(255, 0, 255);
-        //world.fill(color);
-
-        worldOuter = new Ellipsoid(this, 16 ,24);
-        worldOuter.setTexture("/src/data/clouds.jpg");
-        worldOuter.setRadius(4000, 4000, 2000);
-        worldOuter.moveTo(width/2, height/2, -1000);
-        worldOuter.rotateToY(-PI/2.3f);
-        worldOuter.drawMode(Shape3D.TEXTURE);
+//        world = new Ellipsoid(this, 32 ,48);
+//        world.setTexture("/src/data/clouds-yellow.jpg");
+//        world.setRadius(4000, 4000, 2500);
+//        world.moveTo(width/2, height/2, -1000);
+//        world.rotateToY(-PI/2);
+//        world.drawMode(Shape3D.TEXTURE);
+//        //world.fill(color(248, 129, 2));
+//        //int color = color(255, 0, 255);
+//        //world.fill(color);
+//
+//        worldOuter = new Ellipsoid(this, 16 ,24);
+//        worldOuter.setTexture("/src/data/clouds.jpg");
+//        worldOuter.setRadius(4000, 4000, 2000);
+//        worldOuter.moveTo(width/2, height/2, -1000);
+//        worldOuter.rotateToY(-PI/2.3f);
+//        worldOuter.drawMode(Shape3D.TEXTURE);
 
         Bg = loadImage("/src/data/clouds-yellow.jpg");
         catchMe = loadImage("/src/data/catch.png");
@@ -280,6 +280,24 @@ public class Kinectris32 extends PApplet {
     	sp.start(); // play the audio file
     	*/
     }   
+    
+    public void levelChange() {
+    	level++;
+    	switch (level) {
+	    	case 3:
+	    		stage.setTexture("/src/data/fractals/fractal-05.jpg", Box.BOTTOM);
+	    		tex = loadImage("/src/data/fractals/fractal-05.jpg");
+	            Bg = loadImage("/src/data/clouds-purple.jpg");
+	    		break;
+	    	case 4:
+	    		stage.setTexture("/src/data/fractals/fractal-07.jpg", Box.BOTTOM);
+	    		tex = loadImage("/src/data/fractals/fractal-07.jpg");
+	            Bg = loadImage("/src/data/clouds-blue.jpg");
+	    		break;
+	    	default:
+	    		break;
+    	}
+    }
     public void draw() {
         //kinect.update();
     	physics.update();
@@ -287,7 +305,6 @@ public class Kinectris32 extends PApplet {
         
         //directionalLight(51, 102, 126, -1, 0, 0);
        
-        fill(255,0,0, 0);
         lights();
 
         // draw the game stage
@@ -335,7 +352,7 @@ public class Kinectris32 extends PApplet {
             	wallWaiting = false;
                 hitTest = false;
                 if (hit) {
-                    level++;
+                    levelChange();
                 }
             	polygonTarget.generatePolygon();
             	for (int i = 0; i < gems.length; i++) {
@@ -554,7 +571,7 @@ public class Kinectris32 extends PApplet {
             pushMatrix();
             translate(x,y,zDepth);
             noStroke();
-            fill(186, 0, 203);
+            fill(stageColor);
             sphere(size);
             translate(-90,-150,0);
             //stroke(color(stageColor));
@@ -567,7 +584,7 @@ public class Kinectris32 extends PApplet {
             rotateX(PI/2);
             ellipse(0,0,size*4,size*4);
             popMatrix();
-            stroke(186, 0, 203, 70);
+            stroke(stageColor, 70);
             strokeWeight(2f);
             noFill();
             if (frameCount > 30) {
@@ -1060,7 +1077,7 @@ public class Kinectris32 extends PApplet {
         		generateWallCutout2();
         		break;
         	default:
-        		generateWallCutout();
+        		generateWallCutout2();
         		break;
         	}
         	resetDeltas();
@@ -1141,7 +1158,7 @@ public class Kinectris32 extends PApplet {
         		drawWallWithCutout2();
         		break;
         	default:
-        		drawWallWithCutout();
+        		drawWallWithCutout2();
         		break;
         	}
         }

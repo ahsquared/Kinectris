@@ -28,14 +28,8 @@ import rwmidi.*;
 
 public class Kinectris32 extends PApplet {
 
-	/*public static boolean fullscreen = false;
 
-    static public void main(String args[]) {
-        if (fullscreen) {
-            PApplet.main(new String[] { "--present", "Kinectris"});
-        }
-    }
-    */
+    
 
     /**
 	 * 
@@ -133,6 +127,7 @@ public class Kinectris32 extends PApplet {
     
     public void setup() {
         size(1280, 720, OPENGL);
+        frame.setLocation(0, 0);
         rightEdge = width*5/4;
         leftEdge = -width/4;
         topEdge = -height/2;
@@ -171,9 +166,13 @@ public class Kinectris32 extends PApplet {
         cp5 = new ControlP5(this);
 
         controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 200).hideCoordinates().setBackground(color(40));
-
-        cp5.addSlider("sliderValue").setRange(0, 255).setPosition(40, 40).setSize(200, 29).setWindow(controlWindow);
-        
+        Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
+//        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
+//        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
+//        cp5.addButton("exitGame").setPosition(20, 80).setSize(20,20).setCaptionLabel("Exit the Game").setGroup(controlGroup);
+        cp5.addSlider("sliderValue").setRange(0, 255).setGroup(controlGroup).linebreak();
+        cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setGroup(controlGroup).linebreak();
+        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setGroup(controlGroup);
         // initialize kinectData
         kinectData = new KinectData();
                 
@@ -270,17 +269,18 @@ public class Kinectris32 extends PApplet {
     	  }
     	}
     
-    public void mousePressed()
-    {
-    	/*
-    	// set the gain based on mouse position
-    	gainValue.setValue((float)mouseX/(float)width);
-    	// move the playback pointer to the first loop point (0.0)
-    	sp.setToLoopStart();
-    	sp.start(); // play the audio file
-    	*/
-    }   
-    
+ 
+    public void moveToSecondScreen(boolean theFlag) {
+    	if (theFlag){
+    		frame.setLocation(1920, 0);
+    	} else {
+    		frame.setLocation(0, 0);
+    	}
+    	
+    }
+    public void exitGame() {
+    	exit();
+    }
     public void levelChange() {
     	level++;
     	switch (level) {
@@ -1634,7 +1634,21 @@ public class Kinectris32 extends PApplet {
         }
     }
 
+    public void init()
+    {
+		frame.removeNotify();
+		frame.setUndecorated(true);
+		frame.addNotify();
+		super.init();
+    }
+    
+	public static boolean fullscreen = false;
+
 	public static void main(String _args[]) {
-		PApplet.main(new String[] { kinectris32.Kinectris32.class.getName() });
+		if (fullscreen) {
+            PApplet.main(new String[] { "--present", kinectris32.Kinectris32.class.getName()});
+        } else {
+        	PApplet.main(new String[] { kinectris32.Kinectris32.class.getName() });
+        }
 	}
 }

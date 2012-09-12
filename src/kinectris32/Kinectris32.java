@@ -58,6 +58,7 @@ public class Kinectris32 extends PApplet {
     int hudPosY = 45;
     boolean paused, hit;
     int pauseCounter = 0;
+    int roundsCompleted, maxRounds;
 
     Gem[] gems;
     
@@ -172,7 +173,7 @@ public class Kinectris32 extends PApplet {
 //        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
 //        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
 //        cp5.addButton("exitGame").setPosition(20, 80).setSize(20,20).setCaptionLabel("Exit the Game").setGroup(controlGroup);
-        cp5.addSlider("sliderValue").setRange(0, 255).setGroup(controlGroup).linebreak();
+        cp5.addSlider("maxRounds").setRange(0, 50).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
         cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setGroup(controlGroup).linebreak();
         cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setGroup(controlGroup);
         // initialize kinectData
@@ -181,6 +182,9 @@ public class Kinectris32 extends PApplet {
         polygonTarget = new PolygonTarget(this, 4, 650, -4000, colT, false, true, false);
         polygonPlayer = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
 
+        roundsCompleted = 0;
+        maxRounds = 10;
+        
         stage = new Box(this);
         stage.fill(color(stageColor));
         stage.stroke(color(lineColor));
@@ -304,7 +308,9 @@ public class Kinectris32 extends PApplet {
         //kinect.update();
     	physics.update();
         background(Bg);
-        
+        if (roundsCompleted > maxRounds) {
+        	level = 1;
+        }
         //directionalLight(51, 102, 126, -1, 0, 0);
        
         lights();
@@ -357,6 +363,10 @@ public class Kinectris32 extends PApplet {
                     levelChange();
                 }
             	polygonTarget.generatePolygon();
+            	
+            	// a round has completed
+            	roundsCompleted++;
+            	
             	for (int i = 0; i < gems.length; i++) {
                 	gems[i].initPosition();
             	}
@@ -419,7 +429,7 @@ public class Kinectris32 extends PApplet {
     	strokeWeight(2f);
     	rect(-width/4 - 10, -height + 120, 1000, 150);
     	fill(255);
-    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + frameRate, hudPosX, hudPosY);
+    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + (int)frameRate + ", maxRounds" + maxRounds, hudPosX, hudPosY);
     	popStyle();
     }
     
@@ -575,16 +585,15 @@ public class Kinectris32 extends PApplet {
             pushMatrix();
             translate(x,y,zDepth);
             noStroke();
-            fill(stageColor);
+            fill(255);
             sphere(size);
-            translate(-90,-150,0);
             //stroke(color(stageColor));
-            image(catchMe, 0, 0);
+            image(catchMe, -110, -150);
             //text("+5", 0,20,0);
             //fill(255, 255, 0, 80);
             //sphere(size + pulseCounter);
             fill(0, 80);
-            translate(90,height*1.5f-y+140, 0);
+            translate(0,height*1.5f-y-10, 0);
             rotateX(PI/2);
             ellipse(0,0,size*4,size*4);
             popMatrix();
@@ -603,7 +612,7 @@ public class Kinectris32 extends PApplet {
             	pushMatrix();
             	translate(trailPoints[i].x, trailPoints[i].y, trailPoints[i].z);
             	float size = counter * 4;
-            	stroke(186, 0, 203, size-20);
+            	stroke(255, 255, 255, size-20);
             	ellipse(0, 0, size, size);
             	popMatrix();
             }

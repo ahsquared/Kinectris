@@ -31,7 +31,7 @@ public class MidiTimer extends PApplet implements Runnable {
 				while (isActive) {
 					Thread.sleep(noteLength);
 					output.sendNoteOff(channel, pitch, 0);
-					//println("turned note " + pitch + " off");
+					//println("turned note "  pitch  " off");
 					isActive = false;
 				}
 				Thread.sleep(25);

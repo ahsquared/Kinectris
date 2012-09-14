@@ -44,22 +44,28 @@ public class Kinectris32 extends PApplet {
     // GUI
     ControlP5 cp5;
     ControlWindow controlWindow;
+    Textlabel fps;
 
     boolean autoCalib = true;
 
     int colT = color(255, 100, 100);
     int colP = color(100, 255, 100);
     PolygonTarget polygonTarget;
-    PolygonPlayer polygonPlayer;
+    PolygonPlayer polygonPlayer, polygonPlayer2;
     boolean wallComing = true;
     boolean wallWaiting = false;
-    PFont myFont;
+    PFont myFontSmall, myFontMed, myFontLarge;
     int hudPosX = 75;
     int hudPosY = 45;
     boolean paused, hit;
     int pauseCounter = 0;
     int roundsCompleted, maxRounds;
-
+    String gameState;
+    int resetTime = 10;
+    int resetTime2 = 10;
+    int splashDuration, splashDuration2; // 30 frames times number of seconds
+    int splashCounter = 0;
+    
     Gem[] gems;
     
     // game states
@@ -86,17 +92,13 @@ public class Kinectris32 extends PApplet {
     // Kinect Joints
     KinectData kinectData;
     boolean noSkeleton = true;
+    boolean noSkeleton2 = true;
+    
+    boolean twoPlayerMode = false;
     
     // oscP5
     OscP5 oscP5;
     NetAddress myRemoteLocation;
-    
-    // audio using Beads
-    AudioContext ac;
-    String sourceAudioFile;
-    SamplePlayer sp;
-    Gain g;
-    Glide gainValue;
     
     PImage tex;
     
@@ -123,13 +125,17 @@ public class Kinectris32 extends PApplet {
     MidiInput input;
     MidiOutput output;
     MidiTimer midiTimer;
+    int midiPort = 11;
     
     PImage Bg;
+    PImage splash, splash2;
     PImage catchMe;
     
     public void setup() {
         size(1280, 720, OPENGL);
         frame.setLocation(0, 0);
+        //String[] fontList = PFont.list();
+        //println(fontList);
         rightEdge = width*5/4;
         leftEdge = -width/4;
         topEdge = -height/2;
@@ -141,8 +147,10 @@ public class Kinectris32 extends PApplet {
         perspective(fov, width/height, cameraZ/10.0f, cameraZ*16f);
         //perspective(radians(45), width/height, 10f,150000f);
         frameRate(30);
-        myFont = createFont("Arial", 32);
-        textFont(myFont);
+        myFontSmall = loadFont("/src/data/fonts/QuartzMS-20.vlw");
+        myFontMed = loadFont("/src/data/fonts/QuartzMS-32.vlw");
+        myFontLarge = loadFont("/src/data/fonts/QuartzMS-48.vlw");
+        textFont(myFontMed);
         fill(0);
         hint(ENABLE_NATIVE_FONTS);
         textMode(SCREEN);
@@ -154,6 +162,7 @@ public class Kinectris32 extends PApplet {
         oscP5 = new OscP5(this, 3001);
         myRemoteLocation = new NetAddress("127.0.0.1", 3001);
         oscP5.plug(this, "allJoints", "/skeleton0");
+        oscP5.plug(this, "allJoints2", "/skeleton1");
         oscP5.plug(this, "noSkeleton", "/noskeleton");
 //        oscP5.plug(this, "wristLeft", "/skeleton0/WristLeft");
 //        oscP5.plug(this, "shoulderRight", "kinect/skeleton/0/shoulder_right");
@@ -168,19 +177,27 @@ public class Kinectris32 extends PApplet {
         // GUI
         cp5 = new ControlP5(this);
 
-        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 200).hideCoordinates().setBackground(color(40));
+        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 250).hideCoordinates().setBackground(color(40));
         Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
 //        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
 //        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
 //        cp5.addButton("exitGame").setPosition(20, 80).setSize(20,20).setCaptionLabel("Exit the Game").setGroup(controlGroup);
         cp5.addSlider("maxRounds").setRange(0, 50).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addSlider("resetTime").setCaptionLabel("Thank you time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addSlider("resetTime2").setCaptionLabel("Info time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addButton("midiPortLocal").setCaptionLabel("Local Midi").setGroup(controlGroup);
+        cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
         cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setGroup(controlGroup).linebreak();
+        cp5.addToggle("twoPlayerMode").setCaptionLabel("Two player mode").setGroup(controlGroup).linebreak();
         cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setGroup(controlGroup);
+        cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup);
+        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 190).setGroup(controlGroup);
         // initialize kinectData
         kinectData = new KinectData();
                 
         polygonTarget = new PolygonTarget(this, 4, 650, -4000, colT, false, true, false);
         polygonPlayer = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
+        polygonPlayer2 = new PolygonPlayer(21, 200, yOffset, 0, colP, true, true, false);
 
         roundsCompleted = 0;
         maxRounds = 10;
@@ -215,6 +232,8 @@ public class Kinectris32 extends PApplet {
 //        worldOuter.drawMode(Shape3D.TEXTURE);
 
         Bg = loadImage("/src/data/clouds-yellow.jpg");
+        splash = loadImage("/src/data/splash.jpg");
+        splash2 = loadImage("/src/data/splash2.jpg");
         catchMe = loadImage("/src/data/catch.png");
         
         // setup obj import
@@ -248,10 +267,13 @@ public class Kinectris32 extends PApplet {
     	
     	println(RWMidi.getOutputDeviceNames());
     	input = RWMidi.getInputDevices()[0].createInput(this);
-    	output = RWMidi.getOutputDevices()[3].createOutput();
+    	output = RWMidi.getOutputDevices()[midiPort].createOutput();
 
     	// timer to end notes after a given time outside the normal thread
-    	midiTimer = new MidiTimer(0, 3);
+    	midiTimer = new MidiTimer(0, midiPort);
+    	
+    	// start the game playing
+    	gameState = "playing";
     }
     
     class VisibleBoxConstraint extends BoxConstraint {
@@ -287,6 +309,17 @@ public class Kinectris32 extends PApplet {
     public void exitGame() {
     	exit();
     }
+    public void playNote() {
+    	sendMidiCC(15, 1, 100, 400);    	
+    }
+    public void midiPortLocal() {
+    	midiPort = 3;
+    	output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    }
+    public void midiPortRemote() {
+    	midiPort = 11;
+    	output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    }
     public void levelChange() {
     	level++;
     	switch (level) {
@@ -304,13 +337,60 @@ public class Kinectris32 extends PApplet {
 	    		break;
     	}
     }
+    
     public void draw() {
+    	switch(gameState) {
+    	case "playing":
+    		runGame();
+    		break;
+    	case "splash":
+    		splashDuration = (int)(resetTime * frameRate);
+    		splashScreen();
+    		break;
+    	case "splash2":
+    		splashDuration2 = (int)(resetTime2 * frameRate);
+    		splashScreen2();
+    		break;
+    	}
+    	fps.setText("FPS: " + (int)frameRate);
+    }
+    
+    public void splashScreen() {
+    	background(splash);
+    	splashCounter++;
+    	pushStyle();
+    	fill(255);
+    	int secondsLeft = (int)((splashDuration - splashCounter) / 30);
+    	textFont(myFontLarge);
+    	text("You caught: " + polygonPlayer.gemScore + " balls and dodged " + polygonPlayer.score + " walls.", 130, 500);
+    	popStyle();
+    	if (splashCounter > splashDuration) { 
+    		gameState = "splash2";
+    		splashCounter = 0;
+    	}
+    }
+    
+    public void splashScreen2() {
+    	background(splash2);
+    	splashCounter++;
+    	pushStyle();
+    	fill(255);
+    	int secondsLeft = (int)((splashDuration2 - splashCounter) / 30);
+    	textFont(myFontLarge);
+    	text("NEXT GAME STARTS IN: " + secondsLeft, 350, 600);
+    	popStyle();
+    	if (splashCounter > splashDuration2) { 
+    		gameState = "playing";
+    		polygonPlayer.score = 0;
+    		polygonPlayer.gemScore = 0;
+    		splashCounter = 0;
+    	}
+    }
+    
+    public void runGame() {
         //kinect.update();
     	physics.update();
         background(Bg);
-        if (roundsCompleted > maxRounds) {
-        	level = 1;
-        }
         //directionalLight(51, 102, 126, -1, 0, 0);
        
         lights();
@@ -333,21 +413,41 @@ public class Kinectris32 extends PApplet {
 	        	if (level == 1) {
 		            if (polygonPlayer.checkMiss(polygonTarget)) {
 		                polygonPlayer.score++;
+		                polygonPlayer.caught();
 		                hit = true;
 		            } else {
 		            	hit = false;
+		            }
+		            if (twoPlayerMode) {
+			            if (polygonPlayer2.checkMiss(polygonTarget)) {
+			                polygonPlayer2.score++;
+			                polygonPlayer2.caught();
+			                hit = true;
+			            } else {
+			            	hit = false;
+			            }
 		            }
 	        	} else {
 		            if (polygonPlayer.checkHit(polygonTarget)) {
 		                polygonPlayer.score++;
+		                polygonPlayer.caught();
 		                hit = true;
 		            } else {
 		            	hit = false;
 		            }
+		            if (twoPlayerMode) {
+			            if (polygonPlayer2.checkHit(polygonTarget)) {
+			                polygonPlayer2.score++;
+			                polygonPlayer2.caught();
+			                hit = true;
+			            } else {
+			            	hit = false;
+			            }
+		            }
 	        		
 	        	}
 	            hitTest = true;
-	            sendMidi(0, 64, 100);
+	            sendMidiCC(15, 1, 100, 400);
 	        }
 	  
         } else if (wallComing && !wallWaiting && hitTest) {
@@ -379,12 +479,23 @@ public class Kinectris32 extends PApplet {
     	        if (gems[i].zDepth >= polygonPlayer.zDepth) {
     		        // check to see if the player has caught a gem
     	        	if (!gems[i].done) {
-			        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 120 ||
-			        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 120) {
-			        		polygonPlayer.gemScore++;
-			        		polygonPlayer.caught();
-			        		gems[i].caught();
-			        	}
+    	        		// check both players
+    	        		if (!noSkeleton) {
+				        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 150 ||
+				        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 150) {
+				        		polygonPlayer.gemScore++;
+				        		polygonPlayer.caught();
+				        		gems[i].caught();
+				        	}
+	    	        	}
+    	        		if (!noSkeleton2 && twoPlayerMode) {
+				        	if (dist(gems[i].x, gems[i].y, polygonPlayer2.handLeftX, polygonPlayer2.handLeftY) < 150 ||
+				        			dist(gems[i].x, gems[i].y, polygonPlayer2.handRightX, polygonPlayer2.handRightY) < 150) {
+				        		polygonPlayer2.gemScore++;
+				        		polygonPlayer2.caught();
+				        		gems[i].caught();
+				        	}
+	    	        	}
 			        	gems[i].done = true;
     	        	}
 		        } else {
@@ -415,21 +526,35 @@ public class Kinectris32 extends PApplet {
 
         if (!noSkeleton) {
         	polygonPlayer.drawPolygon();
+        	noSkeleton = true;
+        }
+        if (!noSkeleton2 && twoPlayerMode) {
+        	polygonPlayer2.drawPolygon();
+        	noSkeleton2 = true;
         }
         
         renderHud();
-     
+        
+        if (roundsCompleted > maxRounds) {
+        	level = 1;
+        	roundsCompleted = 0;
+        	gameState = "splash";
+        }
+
     }
 
 
     private void renderHud() {
     	pushStyle();
-    	fill(0, 50);
+    	fill(0, 80);
     	stroke(lineColor);
     	strokeWeight(2f);
-    	rect(-width/4 - 10, -height + 120, 1000, 150);
+    	pushMatrix();
+    	translate(0,0,700);
+    	rect(-width/4 + 500, -height + 620, 800, 65);
+    	popMatrix();
     	fill(255);
-    	text("Score: " + polygonPlayer.score + " :: Gems: " + polygonPlayer.gemScore + ", FPS: " + (int)frameRate + ", maxRounds" + maxRounds, hudPosX, hudPosY);
+    	text("Walls Passed: " + polygonPlayer.score + ", Balls Caught: " + polygonPlayer.gemScore + ", Walls Remaining: " + (maxRounds - roundsCompleted + 1), hudPosX, hudPosY);
     	popStyle();
     }
     
@@ -481,7 +606,7 @@ public class Kinectris32 extends PApplet {
             	trailPoints[i] = new Vec3D(0,0,0);
             }
             initPosition();
-            gemTimer = new MidiTimer(0, 3);
+            gemTimer = new MidiTimer(0, midiPort);
 
         }
 //        private void updatePosition() {
@@ -632,7 +757,14 @@ public class Kinectris32 extends PApplet {
     	output.sendNoteOn(channel, pitch, velocity); // Send a Midi noteOn
     	midiTimer.setNote(channel, pitch, 250);
     }
-
+    private void sendMidi(int channel, int pitch, int velocity, int duration) {
+    	output.sendNoteOn(channel, pitch, velocity); // Send a Midi noteOn
+    	midiTimer.setNote(channel, pitch, duration);
+    }
+    private void sendMidiCC(int channel, int cc, int value, int duration) {
+    	output.sendController(channel, cc, value); // Send a Midi noteOn
+    	//midiTimer.setController(channel, cc, value, duration);
+    }
     public void noSkeleton(String data) {
     	noSkeleton = true;
     }
@@ -744,6 +876,89 @@ public class Kinectris32 extends PApplet {
         }
     }
         
+    public void allJoints2(String data) {
+    	
+    	noSkeleton2 = false;
+        fill(255);
+        String[] joints = data.split(",");
+        for(int i=0; i < joints.length; i++) {
+        	String[] parts = joints[i].split(":");
+        	String[] nameNumber = parts[0].split("\\|");
+        	int jointNumber = Integer.parseInt(nameNumber[1].trim());
+        	String name = nameNumber[0];
+        	String[] values = parts[1].split("\\|");
+        	float x = Float.valueOf(values[0].trim()).floatValue();
+        	float y = Float.valueOf(values[1].trim()).floatValue();
+        	float z = Float.valueOf(values[2].trim()).floatValue();
+        	switch (jointNumber) {
+	        	case 20:{
+	        		polygonPlayer2.updateJoint(0, x, y, z);
+	        		polygonPlayer2.updateJoint(1, x+.05f, y, z);
+	        		break;
+	        	}
+	        	case 18:{
+	        		polygonPlayer2.updateJoint(2, x, y, z);
+	        		break;
+	        	}
+	        	case 17:{
+	        		polygonPlayer2.updateJoint(3, x, y, z);
+	        		break;
+	        	}
+	        	case 10:{
+	        		polygonPlayer2.updateJoint(5, x, y, z);
+	        		break;
+	        	}
+	        	case 12:{
+	        		polygonPlayer2.updateJoint(6, x, y, z);
+	        		polygonPlayer2.updateJoint(7, x+.02f, y-.03f, z);
+	        		break;
+	        	}
+	        	case 9:{
+	        		polygonPlayer2.updateJoint(4, x-.04f, y+.03f, z);
+	        		polygonPlayer2.updateJoint(8, x, y, z);
+	        		break;
+	        	}
+	        	case 4:{
+	        		polygonPlayer2.updateJoint(9, x, y, z);
+	        		break;
+	        	}
+	        	case 5:{
+	        		polygonPlayer2.updateJoint(10, x, y, z);
+	        		polygonPlayer2.updateJoint(14, x+.03f, y+.03f, z);
+	        		break;
+	        	}
+	        	case 8:{
+	        		polygonPlayer2.updateJoint(11, x, y, z);
+	        		polygonPlayer2.updateJoint(12, x+.02f, y+.03f, z);
+	        		break;
+	        	}
+	        	case 6:{
+	        		polygonPlayer2.updateJoint(13, x+.03f, y, z);
+	        		break;
+	        	}
+	        	case 13:{
+	        		polygonPlayer2.updateJoint(15, x, y, z);
+	        		break;
+	        	}
+	        	case 14:{
+	        		polygonPlayer2.updateJoint(16, x, y, z);
+	        		break;
+	        	}
+	        	case 16:{
+	        		polygonPlayer2.updateJoint(17, x, y, z);
+	        		polygonPlayer2.updateJoint(18, x+.05f, y, z);
+	        		break;
+	        	}
+	        	case 1:{
+	        		polygonPlayer2.updateJoint(19, x-.02f, y, z);
+	        		polygonPlayer2.updateJoint(20, x+.02f, y, z);
+	        		break;
+	        	}
+        	}
+        	        	
+        	// text(name + " - " + "x: " + x*width + ", y: " + y*height, scorePosX, 100 + (i*20), 0);
+        }
+    }
 
 //    // for debugging/testing purposes
 //    public void mousePressed() {

@@ -276,14 +276,14 @@ public class Kinectris32 extends PApplet {
         cp5.addSlider("resetTime2").setCaptionLabel("Info time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
         cp5.addSlider("playerScaleFactor").setCaptionLabel("Player Scale").setRange(0, 2).setHeight(15).setValue(.75f).setGroup(controlGroup).linebreak();
         cp5.addSlider("wallsPerLevel").setCaptionLabel("Walls per Level").setRange(0, 10).setHeight(15).setValue(3).setGroup(controlGroup).linebreak();
-        cp5.addSlider("nobodyPlayingCounterMax").setCaptionLabel("Min idle time before reset").setRange(0, 2000).setHeight(15).setValue(1000).setGroup(controlGroup).linebreak();
+        cp5.addSlider("nobodyPlayingCounterMax").setCaptionLabel("Min idle time before reset").setRange(0, 2000).setHeight(15).setValue(500).setGroup(controlGroup).linebreak();
         cp5.addToggle("midiPort").setCaptionLabel("Local Midi when ON").setValue(true).setGroup(controlGroup).linebreak();
         //cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
         cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setValue(true).setGroup(controlGroup).linebreak();
         cp5.addToggle("twoPlayerMode").setCaptionLabel("Two player mode").setGroup(controlGroup).linebreak();
         cp5.addButton("resetGame").setCaptionLabel("Reset the Game").setGroup(controlGroup);
         cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup).linebreak();
-        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
+        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setPosition(0, 330).setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
         fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 330).setGroup(controlGroup);
 
     
@@ -320,6 +320,7 @@ public class Kinectris32 extends PApplet {
     	
     }
     public void resetGame() {
+    	roundsCompleted = 0;
 		level = 0;
 		hitCount = wallsPerLevel - 1;
 		levelChange();
@@ -1879,6 +1880,12 @@ public class Kinectris32 extends PApplet {
             beginShape();
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);
             for (int i=0; i < n; i++) {
+            	if (i == 12 || i == 13 || i == 14
+            			|| i == 7 || i == 8 || i ==9) {
+            		stroke(stageColor);
+            	} else {
+            		stroke(playerColor);
+            	}
                 curveVertex(adjustedPolygonCoords[0][i], adjustedPolygonCoords[1][i], adjustedPolygonCoords[2][i]+1);
             }
             curveVertex(adjustedPolygonCoords[0][0], adjustedPolygonCoords[1][0], adjustedPolygonCoords[2][0]+1);

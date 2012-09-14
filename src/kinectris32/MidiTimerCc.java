@@ -2,26 +2,28 @@ package kinectris32;
 import processing.core.*;
 import rwmidi.*;
 
-public class MidiTimer extends PApplet implements Runnable {
+public class MidiTimerCc extends PApplet implements Runnable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8939567253634506378L;
+	private static final long serialVersionUID = -8939567253634506379L;
 	
 	MidiOutput output;
 	boolean isRunning = true;
 	boolean isActive = false;
-	int noteLength;
+	int msgLength;
 	int pitch;
-
+	int cc;
+	int value;
 	int channel;
 	
-	MidiTimer(int c, int device) {
+	MidiTimerCc(int c, int device) {
 		isRunning = true;
 		channel = c;
 		pitch = 64;
-
-		noteLength = 250;
+		cc = 1;
+		value = 0;
+		msgLength = 250;
 		output = RWMidi.getOutputDevices()[device].createOutput();
 		Thread t = new Thread(this);
 		t.start();
@@ -31,13 +33,12 @@ public class MidiTimer extends PApplet implements Runnable {
 		try {
 			while (isRunning) {
 				while (isActive) {
-					Thread.sleep(noteLength);
+					Thread.sleep(msgLength);
 
-						output.sendNoteOff(channel, pitch, 0);
+					output.sendController(channel, cc, value);
 
 					//println("turned note "  pitch  " off");
 					isActive = false;
-
 				}
 				Thread.sleep(25);
 			}
@@ -46,13 +47,15 @@ public class MidiTimer extends PApplet implements Runnable {
 		}
 	} 
 
-	void setNote(int c, int p, int l) {
-		channel = c;
-		pitch = p;
-		noteLength = l;
-		isActive = true;
-	}
+
 	
+	void setController(int c, int _cc, int v, int l) {
+		channel = c;
+		cc = _cc;
+		value = v;
+		msgLength = l;
+		isActive = true;
+	} 
 	
 	void quit() {
 		isRunning = false;  // Setting running to false ends the loop in run()

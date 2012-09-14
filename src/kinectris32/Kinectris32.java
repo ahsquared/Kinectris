@@ -125,6 +125,7 @@ public class Kinectris32 extends PApplet {
     MidiInput input;
     MidiOutput output;
     MidiTimer midiTimer;
+    MidiTimerCc midiTimerCc;
     int midiPort = 11;
     
     PImage Bg;
@@ -271,7 +272,7 @@ public class Kinectris32 extends PApplet {
 
     	// timer to end notes after a given time outside the normal thread
     	midiTimer = new MidiTimer(0, midiPort);
-    	
+    	midiTimerCc = new MidiTimerCc(0, midiPort);
     	// start the game playing
     	gameState = "playing";
     }
@@ -310,15 +311,19 @@ public class Kinectris32 extends PApplet {
     	exit();
     }
     public void playNote() {
-    	sendMidiCC(15, 1, 100, 400);    	
+    	sendMidiCC(15, 1, 100, 0, 600);    	
     }
     public void midiPortLocal() {
     	midiPort = 3;
     	output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    	midiTimer.output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    	midiTimerCc.output = RWMidi.getOutputDevices()[midiPort].createOutput();
     }
     public void midiPortRemote() {
     	midiPort = 11;
     	output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    	midiTimer.output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    	midiTimerCc.output = RWMidi.getOutputDevices()[midiPort].createOutput();
     }
     public void levelChange() {
     	level++;
@@ -447,7 +452,7 @@ public class Kinectris32 extends PApplet {
 	        		
 	        	}
 	            hitTest = true;
-	            sendMidiCC(15, 1, 100, 400);
+	            sendMidiCC(15, 1, 100, 0, 600);
 	        }
 	  
         } else if (wallComing && !wallWaiting && hitTest) {
@@ -761,9 +766,9 @@ public class Kinectris32 extends PApplet {
     	output.sendNoteOn(channel, pitch, velocity); // Send a Midi noteOn
     	midiTimer.setNote(channel, pitch, duration);
     }
-    private void sendMidiCC(int channel, int cc, int value, int duration) {
-    	output.sendController(channel, cc, value); // Send a Midi noteOn
-    	//midiTimer.setController(channel, cc, value, duration);
+    private void sendMidiCC(int channel, int cc, int value, int valueOff, int duration) {
+    	output.sendController(channel, cc, value); // Send a Controller message
+    	midiTimerCc.setController(channel, cc, valueOff, duration);
     }
     public void noSkeleton(String data) {
     	noSkeleton = true;

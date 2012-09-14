@@ -67,6 +67,8 @@ public class Kinectris32 extends PApplet {
     int resetTime2 = 10;
     int splashDuration, splashDuration2; // 30 frames times number of seconds
     int splashCounter = 0;
+    int nobodyPlayingCounter = 0;
+    int nobodyPlayingCounterMax = 0;
     
     Gem[] gems;
     
@@ -264,7 +266,7 @@ public class Kinectris32 extends PApplet {
         // GUI
         cp5 = new ControlP5(this);
 
-        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 350).hideCoordinates().setBackground(color(40));
+        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 390).hideCoordinates().setBackground(color(40));
         Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
 //        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
 //        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
@@ -274,6 +276,7 @@ public class Kinectris32 extends PApplet {
         cp5.addSlider("resetTime2").setCaptionLabel("Info time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
         cp5.addSlider("playerScaleFactor").setCaptionLabel("Player Scale").setRange(0, 2).setHeight(15).setValue(.75f).setGroup(controlGroup).linebreak();
         cp5.addSlider("wallsPerLevel").setCaptionLabel("Walls per Level").setRange(0, 10).setHeight(15).setValue(3).setGroup(controlGroup).linebreak();
+        cp5.addSlider("nobodyPlayingCounterMax").setCaptionLabel("Min idle time before reset").setRange(0, 2000).setHeight(15).setValue(1000).setGroup(controlGroup).linebreak();
         cp5.addToggle("midiPort").setCaptionLabel("Local Midi when ON").setValue(true).setGroup(controlGroup).linebreak();
         //cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
         cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setValue(true).setGroup(controlGroup).linebreak();
@@ -281,7 +284,7 @@ public class Kinectris32 extends PApplet {
         cp5.addButton("resetGame").setCaptionLabel("Reset the Game").setGroup(controlGroup);
         cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup).linebreak();
         cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
-        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 290).setGroup(controlGroup);
+        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 330).setGroup(controlGroup);
 
     
     }
@@ -588,14 +591,24 @@ public class Kinectris32 extends PApplet {
             }
         }
 
+        if (nobodyPlayingCounter >= nobodyPlayingCounterMax && !noSkeleton) {
+        	nobodyPlayingCounter = 0;
+        	gameState = "splash2";
+        }
         if (!noSkeleton) {
+        	nobodyPlayingCounter = 0;
         	polygonPlayer.drawPolygon();
         	noSkeleton = true;
         }
         if (!noSkeleton2 && twoPlayerMode) {
+        	nobodyPlayingCounter = 0;
         	polygonPlayer2.drawPolygon();
         	noSkeleton2 = true;
         }
+        if (noSkeleton && noSkeleton2) {
+        	nobodyPlayingCounter++;
+        }
+        
         
         renderHud();
         

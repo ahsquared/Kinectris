@@ -60,6 +60,8 @@ public class Kinectris32 extends PApplet {
     boolean paused, hit;
     int pauseCounter = 0;
     int roundsCompleted, maxRounds;
+    int wallsPerLevel = 3;
+    int hitCount = 0;
     String gameState;
     int resetTime = 10;
     int resetTime2 = 10;
@@ -73,7 +75,7 @@ public class Kinectris32 extends PApplet {
     
     // position of player on screen
     float yOffset = 0;
-    float playerScaleFactor = 1.5f;
+    float playerScaleFactor = .75f;
     
     // screen dimensions
     float rightEdge, leftEdge, topEdge, bottomEdge, totalWidth, totalHeight;
@@ -126,7 +128,7 @@ public class Kinectris32 extends PApplet {
     MidiOutput output;
     MidiTimer midiTimer;
     MidiTimerCc midiTimerCc;
-    int midiPort = 11;
+    int midiPort = 3;
     
     PImage Bg;
     PImage splash, splash2;
@@ -175,24 +177,6 @@ public class Kinectris32 extends PApplet {
 //        oscP5.plug(this, "hipCenter", "kinect/skeleton/0/hip_center");
 //        oscP5.plug(this, "head", "kinect/skeleton/0/head");
 
-        // GUI
-        cp5 = new ControlP5(this);
-
-        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 250).hideCoordinates().setBackground(color(40));
-        Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
-//        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
-//        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
-//        cp5.addButton("exitGame").setPosition(20, 80).setSize(20,20).setCaptionLabel("Exit the Game").setGroup(controlGroup);
-        cp5.addSlider("maxRounds").setRange(0, 50).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
-        cp5.addSlider("resetTime").setCaptionLabel("Thank you time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
-        cp5.addSlider("resetTime2").setCaptionLabel("Info time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
-        cp5.addButton("midiPortLocal").setCaptionLabel("Local Midi").setGroup(controlGroup);
-        cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
-        cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setGroup(controlGroup).linebreak();
-        cp5.addToggle("twoPlayerMode").setCaptionLabel("Two player mode").setGroup(controlGroup).linebreak();
-        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setGroup(controlGroup);
-        cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup);
-        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 190).setGroup(controlGroup);
         // initialize kinectData
         kinectData = new KinectData();
                 
@@ -275,6 +259,31 @@ public class Kinectris32 extends PApplet {
     	midiTimerCc = new MidiTimerCc(0, midiPort);
     	// start the game playing
     	gameState = "playing";
+    	sendMidi(15, 99, 100);
+    	
+        // GUI
+        cp5 = new ControlP5(this);
+
+        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 350).hideCoordinates().setBackground(color(40));
+        Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
+//        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
+//        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
+//        cp5.addButton("exitGame").setPosition(20, 80).setSize(20,20).setCaptionLabel("Exit the Game").setGroup(controlGroup);
+        cp5.addSlider("maxRounds").setRange(0, 50).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addSlider("resetTime").setCaptionLabel("Thank you time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addSlider("resetTime2").setCaptionLabel("Info time").setRange(0, 30).setHeight(15).setValue(10).setGroup(controlGroup).linebreak();
+        cp5.addSlider("playerScaleFactor").setCaptionLabel("Player Scale").setRange(0, 2).setHeight(15).setValue(.75f).setGroup(controlGroup).linebreak();
+        cp5.addSlider("wallsPerLevel").setCaptionLabel("Walls per Level").setRange(0, 10).setHeight(15).setValue(3).setGroup(controlGroup).linebreak();
+        cp5.addToggle("midiPort").setCaptionLabel("Local Midi when ON").setValue(true).setGroup(controlGroup).linebreak();
+        //cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
+        cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setValue(true).setGroup(controlGroup).linebreak();
+        cp5.addToggle("twoPlayerMode").setCaptionLabel("Two player mode").setGroup(controlGroup).linebreak();
+        cp5.addButton("resetGame").setCaptionLabel("Reset the Game").setGroup(controlGroup);
+        cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup).linebreak();
+        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
+        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 290).setGroup(controlGroup);
+
+    
     }
     
     class VisibleBoxConstraint extends BoxConstraint {
@@ -307,39 +316,77 @@ public class Kinectris32 extends PApplet {
     	}
     	
     }
+    public void resetGame() {
+		level = 0;
+		hitCount = wallsPerLevel - 1;
+		levelChange();
+		polygonPlayer.score = 0;
+		polygonPlayer.gemScore = 0;
+		splashCounter = 0;
+		gameState = "playing";
+    }
     public void exitGame() {
+    	sendMidi(15, 0, 100);
     	exit();
     }
     public void playNote() {
-    	sendMidiCC(15, 1, 100, 0, 600);    	
+    	//doTapeStop();
+    	sendMidi(15, 90, 100);
     }
-    public void midiPortLocal() {
-    	midiPort = 3;
+    public void midiPort(boolean local) {
+    	if (local) {
+    		midiPort = 3;
+    	} else {
+    		midiPort = 11;
+    	}
     	output = RWMidi.getOutputDevices()[midiPort].createOutput();
     	midiTimer.output = RWMidi.getOutputDevices()[midiPort].createOutput();
     	midiTimerCc.output = RWMidi.getOutputDevices()[midiPort].createOutput();
+    	for (int i = 0; i < gems.length; i++) {
+    		gems[0].gemTimer = new MidiTimer(0, midiPort);
+    	}
     }
-    public void midiPortRemote() {
-    	midiPort = 11;
-    	output = RWMidi.getOutputDevices()[midiPort].createOutput();
-    	midiTimer.output = RWMidi.getOutputDevices()[midiPort].createOutput();
-    	midiTimerCc.output = RWMidi.getOutputDevices()[midiPort].createOutput();
-    }
+//    public void midiPortRemote() {
+//    	midiPort = 11;
+//    	output = RWMidi.getOutputDevices()[midiPort].createOutput();
+//    	midiTimer.output = RWMidi.getOutputDevices()[midiPort].createOutput();
+//    	midiTimerCc.output = RWMidi.getOutputDevices()[midiPort].createOutput();
+//    	for (int i = 0; i < gems.length; i++) {
+//    		gems[0].gemTimer = new MidiTimer(0, midiPort);
+//    	}
+//    }
     public void levelChange() {
-    	level++;
-    	switch (level) {
-	    	case 3:
-	    		stage.setTexture("/src/data/fractals/fractal-05.jpg", Box.BOTTOM);
-	    		tex = loadImage("/src/data/fractals/fractal-05.jpg");
-	            Bg = loadImage("/src/data/clouds-purple.jpg");
-	    		break;
-	    	case 4:
-	    		stage.setTexture("/src/data/fractals/fractal-07.jpg", Box.BOTTOM);
-	    		tex = loadImage("/src/data/fractals/fractal-07.jpg");
-	            Bg = loadImage("/src/data/clouds-blue.jpg");
-	    		break;
-	    	default:
-	    		break;
+    	hitCount++;
+    	if (hitCount == wallsPerLevel) {
+    		hitCount = 0;
+	    	level++;
+	    	switch (level) {
+		    	case 1:
+		    		sendMidi(15, 99, 100);
+		    		stage.setTexture("/src/data/fractals/fractal-03.jpg", Box.BOTTOM);
+		    		tex = loadImage("/src/data/fractals/fractal-03.jpg");
+		            Bg = loadImage("/src/data/clouds-yellow.jpg");	    		
+		    		break;
+		    	case 2:
+		    		sendMidi(15, 99, 100);
+		    		stage.setTexture("/src/data/fractals/fractal-03.jpg", Box.BOTTOM);
+		    		tex = loadImage("/src/data/fractals/fractal-03.jpg");
+		            Bg = loadImage("/src/data/clouds-yellow.jpg");	    		
+		    		break;
+		    	case 3:
+		    		sendMidi(15, 100, 100);
+		    		stage.setTexture("/src/data/fractals/fractal-05.jpg", Box.BOTTOM);
+		    		tex = loadImage("/src/data/fractals/fractal-05.jpg");
+		            Bg = loadImage("/src/data/clouds-purple.jpg");
+		    		break;
+		    	case 4:
+		    		stage.setTexture("/src/data/fractals/fractal-07.jpg", Box.BOTTOM);
+		    		tex = loadImage("/src/data/fractals/fractal-07.jpg");
+		            Bg = loadImage("/src/data/clouds-blue.jpg");
+		    		break;
+		    	default:
+		    		break;
+	    	}
     	}
     }
     
@@ -367,7 +414,15 @@ public class Kinectris32 extends PApplet {
     	fill(255);
     	int secondsLeft = (int)((splashDuration - splashCounter) / 30);
     	textFont(myFontLarge);
-    	text("You caught: " + polygonPlayer.gemScore + " balls and dodged " + polygonPlayer.score + " walls.", 130, 500);
+    	String ball = "balls";
+    	String wall = "walls";
+    	if (polygonPlayer.gemScore == 1) {
+    		ball = "ball";
+    	}
+    	if (polygonPlayer.score == 1) {
+    		wall = "wall";
+    	}
+    	text("You caught: " + polygonPlayer.gemScore + " " + ball + " and dodged " + polygonPlayer.score + " " + wall + ".", 130, 500);
     	popStyle();
     	if (splashCounter > splashDuration) { 
     		gameState = "splash2";
@@ -382,13 +437,10 @@ public class Kinectris32 extends PApplet {
     	fill(255);
     	int secondsLeft = (int)((splashDuration2 - splashCounter) / 30);
     	textFont(myFontLarge);
-    	text("NEXT GAME STARTS IN: " + secondsLeft, 350, 600);
+    	text("NEXT GAME STARTS IN: " + secondsLeft, 350, 650);
     	popStyle();
     	if (splashCounter > splashDuration2) { 
-    		gameState = "playing";
-    		polygonPlayer.score = 0;
-    		polygonPlayer.gemScore = 0;
-    		splashCounter = 0;
+    		resetGame();
     	}
     }
     
@@ -419,17 +471,21 @@ public class Kinectris32 extends PApplet {
 		            if (polygonPlayer.checkMiss(polygonTarget)) {
 		                polygonPlayer.score++;
 		                polygonPlayer.caught();
+		                sendMidi(15, 90, 100);
 		                hit = true;
 		            } else {
 		            	hit = false;
+		            	doTapeStop();
 		            }
 		            if (twoPlayerMode) {
 			            if (polygonPlayer2.checkMiss(polygonTarget)) {
 			                polygonPlayer2.score++;
 			                polygonPlayer2.caught();
 			                hit = true;
+			                sendMidi(15, 90, 100);
 			            } else {
 			            	hit = false;
+			            	doTapeStop();
 			            }
 		            }
 	        	} else {
@@ -437,22 +493,25 @@ public class Kinectris32 extends PApplet {
 		                polygonPlayer.score++;
 		                polygonPlayer.caught();
 		                hit = true;
+		                sendMidi(15, 90, 100);
 		            } else {
 		            	hit = false;
+		            	doTapeStop();
 		            }
 		            if (twoPlayerMode) {
 			            if (polygonPlayer2.checkHit(polygonTarget)) {
 			                polygonPlayer2.score++;
 			                polygonPlayer2.caught();
 			                hit = true;
+			                sendMidi(15, 90, 100);
 			            } else {
 			            	hit = false;
+			            	doTapeStop();
 			            }
 		            }
 	        		
 	        	}
 	            hitTest = true;
-	            sendMidiCC(15, 1, 100, 0, 600);
 	        }
 	  
         } else if (wallComing && !wallWaiting && hitTest) {
@@ -769,6 +828,9 @@ public class Kinectris32 extends PApplet {
     private void sendMidiCC(int channel, int cc, int value, int valueOff, int duration) {
     	output.sendController(channel, cc, value); // Send a Controller message
     	midiTimerCc.setController(channel, cc, valueOff, duration);
+    }
+    private void doTapeStop() {
+    	sendMidiCC(15, 1, 100, 0, 600); 
     }
     public void noSkeleton(String data) {
     	noSkeleton = true;
@@ -1196,6 +1258,7 @@ public class Kinectris32 extends PApplet {
         shapes3d.Box boxTarget;
         PApplet parent;
         float wallSize;
+        float wallOffset;
         float bottomRightX, topRightX, topRightY, middleX, middleY, topLeftX, topLeftY, bottomLeftX;
         float bottomRightU, topRightU, topRightV, middleU, middleV, topLeftU, topLeftV, bottomLeftU;
 
@@ -1215,6 +1278,7 @@ public class Kinectris32 extends PApplet {
             score = 0;
             lives = 5;
             wallSize = resetWallSize();
+            wallOffset = 0;
             
             boxTarget = new Box(kinectris32.Kinectris32.this);
             boxTarget.fill(color(stageColor));
@@ -1249,19 +1313,20 @@ public class Kinectris32 extends PApplet {
         private float[][] simpleWall() {
         	//this.zDepth = z;
         	wallSize = resetWallSize();
+        	wallOffset = parent.random(0, width);
         	float[][] polygonCoords = new float[3][4];
         	float z = zDepth;
         	//leftEdge, -height/2, boxTarget.getWidth(), boxTarget.getHeight()
-            polygonCoords[0][0] = leftEdge;
+            polygonCoords[0][0] = leftEdge + wallOffset;
             polygonCoords[1][0] = -height/2;
             polygonCoords[2][0] = z;
-            polygonCoords[0][1] = width/wallSize - width/4;
+            polygonCoords[0][1] = width/wallSize - width/4 + wallOffset;
             polygonCoords[1][1] = -height/2;
             polygonCoords[2][1] = z;
-            polygonCoords[0][2] = width/wallSize - width/4;
+            polygonCoords[0][2] = width/wallSize - width/4 + wallOffset;
             polygonCoords[1][2] = height*1.5f;
             polygonCoords[2][2] = z;
-            polygonCoords[0][3] = leftEdge;
+            polygonCoords[0][3] = leftEdge + wallOffset;
             polygonCoords[1][3] = height*1.5f;
             polygonCoords[2][3] = z;
             return polygonCoords;
@@ -1384,7 +1449,7 @@ public class Kinectris32 extends PApplet {
 //        		
                 float newWidth = width/wallSize;
                 boxTarget.setSize(newWidth, height*2f, 50);
-                boxTarget.moveTo(leftEdge + newWidth/2, height/2, zDepth-10);
+                boxTarget.moveTo(leftEdge + newWidth/2 + wallOffset, height/2, zDepth-10);
                 boxTarget.draw();  
         		break;
         	case 2:
@@ -1400,6 +1465,7 @@ public class Kinectris32 extends PApplet {
         }
         
         private void generateWall() {
+        	numPoints = 4;
         	//wallSize = resetWallSize();
     		polygon = simpleWall();
             offsetAdjustedPolygonCoords();
@@ -1860,8 +1926,8 @@ public class Kinectris32 extends PApplet {
 
         private void updateJoint(int joint, float x, float y, float z) {
             // adjust x,y,z positions to match canvas dimensions
-            x = (x * width * playerScaleFactor) - width/4;
-            y = (y * height * playerScaleFactor) - height/4;
+            x = (x * width);
+            y = (y * height * playerScaleFactor * 2f);
             polygon[0][joint] = x;
             polygon[1][joint] = y;
             // leave z alone for now

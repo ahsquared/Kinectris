@@ -69,6 +69,7 @@ public class Kinectris32 extends PApplet {
     int splashCounter = 0;
     int nobodyPlayingCounter = 0;
     int nobodyPlayingCounterMax = 0;
+    int catchDistanceThreshold = 150;
     
     Gem[] gems;
     
@@ -201,6 +202,8 @@ public class Kinectris32 extends PApplet {
         stage.setTexture("/src/data/dry-grass-wall.png", Box.LEFT);
         stage.setTexture("/src/data/dry-grass-wall.png", Box.BACK);
 
+        //createFloatingShapes();
+        
 //        world = new Ellipsoid(this, 32 ,48);
 //        world.setTexture("/src/data/clouds-yellow.jpg");
 //        world.setRadius(4000, 4000, 2500);
@@ -266,7 +269,7 @@ public class Kinectris32 extends PApplet {
         // GUI
         cp5 = new ControlP5(this);
 
-        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 390).hideCoordinates().setBackground(color(40));
+        controlWindow = cp5.addControlWindow("Controls", 0, 0, 400, 430).hideCoordinates().setBackground(color(40));
         Group controlGroup = cp5.addGroup("MainControls").setPosition(20, 20).moveTo(controlWindow);
 //        cp5.addSlider("sliderValue").setPosition(20, 20).setRange(0, 255).setSize(200, 20).setGroup(controlGroup);
 //        cp5.addToggle("moveToSecondScreen").setPosition(20, 50).setSize(20,20).setCaptionLabel("Move to Second Screen").setGroup(controlGroup);
@@ -277,14 +280,15 @@ public class Kinectris32 extends PApplet {
         cp5.addSlider("playerScaleFactor").setCaptionLabel("Player Scale").setRange(0, 2).setHeight(15).setValue(.75f).setGroup(controlGroup).linebreak();
         cp5.addSlider("wallsPerLevel").setCaptionLabel("Walls per Level").setRange(0, 10).setHeight(15).setValue(3).setGroup(controlGroup).linebreak();
         cp5.addSlider("nobodyPlayingCounterMax").setCaptionLabel("Min idle time before reset").setRange(0, 2000).setHeight(15).setValue(500).setGroup(controlGroup).linebreak();
+        cp5.addSlider("catchDistanceThreshold").setCaptionLabel("Catch Distance").setRange(0, 400).setHeight(15).setValue(150).setGroup(controlGroup).linebreak();
         cp5.addToggle("midiPort").setCaptionLabel("Local Midi when ON").setValue(true).setGroup(controlGroup).linebreak();
         //cp5.addButton("midiPortRemote").setCaptionLabel("Remote Midi").setGroup(controlGroup).linebreak();
         cp5.addToggle("moveToSecondScreen").setCaptionLabel("Move to Second Screen").setValue(true).setGroup(controlGroup).linebreak();
         cp5.addToggle("twoPlayerMode").setCaptionLabel("Two player mode").setGroup(controlGroup).linebreak();
         cp5.addButton("resetGame").setCaptionLabel("Reset the Game").setGroup(controlGroup);
         cp5.addButton("playNote").setCaptionLabel("Play A Note").setGroup(controlGroup).linebreak();
-        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setPosition(0, 330).setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
-        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 330).setGroup(controlGroup);
+        cp5.addButton("exitGame").setCaptionLabel("Exit the Game").setPosition(0, 370).setColorBackground(color(255, 0, 0)).setColorActive(color(136, 15, 37)).setColorForeground(color(136, 15, 37)).setGroup(controlGroup);
+        fps = cp5.addTextlabel("fps").setText("FPS: ").setFont(myFontSmall).setPosition(280, 370).setGroup(controlGroup);
 
     
     }
@@ -549,16 +553,16 @@ public class Kinectris32 extends PApplet {
     	        	if (!gems[i].done) {
     	        		// check both players
     	        		if (!noSkeleton) {
-				        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < 150 ||
-				        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < 150) {
+				        	if (dist(gems[i].x, gems[i].y, polygonPlayer.handLeftX, polygonPlayer.handLeftY) < catchDistanceThreshold ||
+				        			dist(gems[i].x, gems[i].y, polygonPlayer.handRightX, polygonPlayer.handRightY) < catchDistanceThreshold) {
 				        		polygonPlayer.gemScore++;
 				        		polygonPlayer.caught();
 				        		gems[i].caught();
 				        	}
 	    	        	}
     	        		if (!noSkeleton2 && twoPlayerMode) {
-				        	if (dist(gems[i].x, gems[i].y, polygonPlayer2.handLeftX, polygonPlayer2.handLeftY) < 150 ||
-				        			dist(gems[i].x, gems[i].y, polygonPlayer2.handRightX, polygonPlayer2.handRightY) < 150) {
+				        	if (dist(gems[i].x, gems[i].y, polygonPlayer2.handLeftX, polygonPlayer2.handLeftY) < catchDistanceThreshold ||
+				        			dist(gems[i].x, gems[i].y, polygonPlayer2.handRightX, polygonPlayer2.handRightY) < catchDistanceThreshold) {
 				        		polygonPlayer2.gemScore++;
 				        		polygonPlayer2.caught();
 				        		gems[i].caught();
@@ -610,7 +614,7 @@ public class Kinectris32 extends PApplet {
         	nobodyPlayingCounter++;
         }
         
-        
+        //drawFloatingShapes();
         renderHud();
         
         if (roundsCompleted > maxRounds) {
@@ -632,7 +636,7 @@ public class Kinectris32 extends PApplet {
     	rect(-width/4 + 500, -height + 620, 800, 65);
     	popMatrix();
     	fill(255);
-    	text("Walls Passed: " + polygonPlayer.score + ", Balls Caught: " + polygonPlayer.gemScore + ", Walls Remaining: " + (maxRounds - roundsCompleted + 1), hudPosX, hudPosY);
+    	text("Balls Caught: " + polygonPlayer.gemScore + "  |  Walls Dodged: " + polygonPlayer.score +  "  |  Walls Remaining: " + (maxRounds - roundsCompleted + 1), hudPosX, hudPosY);
     	popStyle();
     }
     
@@ -640,11 +644,11 @@ public class Kinectris32 extends PApplet {
     Box cloud;
     private void createFloatingShapes() {
     	cloud = new Box(this);
-    	cloud.setSize(100, 100, 2);
-    	cloud.moveTo(width/2, height/2, -1500);
+    	cloud.setSize(1000, 1000, 2);
+    	cloud.moveTo(-width, height/2, -4500);
     	cloud.setTexture("/src/data/clouds.png", Box.FRONT);
     	cloud.drawMode(Shape3D.TEXTURE);
-    	shapeMover = new ShapeMover(this, cloud, new PVector(width/2, height/2, -500), new PVector(0,0,-200), 2f, 2f);
+    	shapeMover = new ShapeMover(this, cloud, new PVector(-width, height/2, -4500), new PVector(width*2, height/2, -4500), 5f, 2f);
     }
     private void drawFloatingShapes() {
     	cloud.draw();
